@@ -66,13 +66,13 @@
 
         <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Doctor ID</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Doctor ID or Doctor Name</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                 <i class="fa-solid fa-user-doctor"></i>
               </span>
-              <input type="text" id="doctorIdInput" required placeholder="e.g. DOC1001" 
-                class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#00A3E0] focus:border-[#004A98] text-sm uppercase font-mono tracking-wider font-medium outline-none transition" />
+              <input type="text" id="doctorIdInput" required placeholder="e.g. DOC1007 or Dr. Ashish Goswami" 
+                class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#00A3E0] focus:border-[#004A98] text-sm font-medium outline-none transition" />
             </div>
           </div>
 
@@ -133,11 +133,20 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Admin Password</label>
-          <input type="password" id="adminPasswordInput" required placeholder="••••••••••••" 
-            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none" />
+          <div class="relative">
+            <input type="password" id="adminPasswordInput" required placeholder="••••••••••••" 
+              class="w-full pl-3.5 pr-10 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none" />
+            <button type="button" onclick="toggleAdminPasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+              <i id="adminEyeIcon" class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+          <div class="mt-2.5 flex items-center justify-between bg-amber-50/70 p-2 rounded-lg border border-amber-200/70 text-xs">
+            <span class="text-[11px] text-amber-900">Pass: <strong class="font-mono text-amber-800">Abhinandanverma@8811</strong></span>
+            <button type="button" onclick="document.getElementById('adminPasswordInput').value='Abhinandanverma@8811'; document.getElementById('adminAuthAlert').classList.add('hidden');" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 bg-white border border-amber-300 px-2 py-0.5 rounded shadow-sm transition">Auto-fill</button>
+          </div>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-2">
+        <div class="flex items-center justify-end gap-2 pt-1">
           <button type="button" onclick="closeAdminAuthModal()" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
             Cancel
           </button>
@@ -1010,6 +1019,13 @@
       document.getElementById('adminAuthModal').classList.add('hidden');
     }
 
+    function toggleAdminPasswordVisibility() {
+      const input = document.getElementById('adminPasswordInput');
+      const icon = document.getElementById('adminEyeIcon');
+      if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+      else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+    }
+
     async function handleAdminLogin(e) {
       e.preventDefault();
       const password = document.getElementById('adminPasswordInput').value.trim();
@@ -1029,11 +1045,11 @@
         switchTab('admin');
         showToast('Admin Console Unlocked', 'success');
       } catch (err) {
-        if (password === 'Abhinandanverma@8811') {
+        if (password === 'Abhinandanverma@8811' || password.toLowerCase() === 'abhinandanverma@8811') {
           isAdminAuthenticated = true;
           closeAdminAuthModal();
           switchTab('admin');
-          showToast('Admin Console Unlocked (Cloud Mode)', 'success');
+          showToast('Admin Console Unlocked', 'success');
           return;
         }
         document.getElementById('adminAuthAlertMsg').textContent = err.message || 'Invalid Admin Password';
@@ -1342,8 +1358,15 @@
       doctors.forEach(doc => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `w-full text-left p-2.5 rounded-xl border ${doc.is_active ? 'border-slate-200 hover:border-[#004A98] bg-slate-50 hover:bg-blue-50/50' : 'border-rose-200 bg-rose-50/40 opacity-75'} text-xs transition group shadow-sm`;
-        btn.onclick = () => fillDemo(doc.doctor_id, doc.passcode || '');
+        btn.className = `w-full text-left p-3 rounded-xl border ${doc.is_active ? 'border-slate-200 hover:border-[#004A98] bg-slate-50 hover:bg-blue-50/70 cursor-pointer' : 'border-rose-200 bg-rose-50/40 opacity-75 cursor-not-allowed'} text-xs transition group shadow-sm`;
+        btn.onclick = () => {
+          fillDemo(doc.doctor_id, doc.passcode || '');
+          if (doc.is_active) {
+            handleLogin(new Event('submit'));
+          } else {
+            showToast('Account suspended / access revoked.', 'error');
+          }
+        };
         btn.innerHTML = `
           <div class="flex items-start justify-between gap-2">
             <div>
@@ -1352,6 +1375,10 @@
                 <span class="font-mono text-[10px] text-slate-400">(${doc.doctor_id})</span>
               </div>
               <div class="text-[11px] text-slate-500 truncate max-w-[240px]">${doc.clinic_name}</div>
+              <div class="text-[10px] text-[#004A98] font-bold mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-lock-open text-emerald-600"></i>
+                <span>Tap to Unlock Instantly</span>
+              </div>
             </div>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${doc.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
               ${doc.is_active ? 'Active' : 'Suspended'}
@@ -1374,15 +1401,49 @@
     }
 
     async function handleLogin(event) {
-      event.preventDefault();
-      const doctorId = document.getElementById('doctorIdInput').value.trim();
+      if (event && event.preventDefault) event.preventDefault();
+      const inputIdOrName = document.getElementById('doctorIdInput').value.trim();
       const passcode = document.getElementById('passcodeInput').value.trim();
+
+      const allDocs = [
+        { doctor_id: 'DOC1007', doctor_name: 'Dr. Ashish Goswami', clinic_name: 'Navjeevan Healthcare', is_active: true, passcode: 'Navjeevan@2021' },
+        { doctor_id: 'DOC1001', doctor_name: 'Dr. A. Sharma, MD', clinic_name: 'Apex Diagnostic & Healthcare Clinic', is_active: true, passcode: 'thyrocare123' },
+        { doctor_id: 'DOC1002', doctor_name: 'Dr. Priya Nair, MBBS, DNB', clinic_name: 'Nair HealthCare & Diagnostics', is_active: true, passcode: 'clinic456' },
+        { doctor_id: 'DOC1004', doctor_name: 'Dr. Sunita Rao, MD (Pathology)', clinic_name: 'CityCare Diagnostics & Research Centre', is_active: true, passcode: 'care2026' },
+        { doctor_id: 'DOC1005', doctor_name: 'Dr. Vikramaditya Sen, MBBS, MD', clinic_name: 'Sen Endocrine & Diabetes Specialty Clinic', is_active: true, passcode: 'thyrocare2026' },
+        { doctor_id: 'DOC1006', doctor_name: 'Dr. Ananya Roy, MBBS, DCP', clinic_name: 'LifeLine Pathology & Wellness Lab', is_active: true, passcode: 'lifeline789' },
+        { doctor_id: 'DOC1003', doctor_name: 'Dr. Rajesh Verma, MD', clinic_name: 'Metro Wellness Center', is_active: false, passcode: 'locked789' }
+      ];
+
+      const savedDocs = localStorage.getItem('thyrocare_public_doctors');
+      let combinedDocs = allDocs;
+      if (savedDocs) {
+        try {
+          const parsed = JSON.parse(savedDocs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const map = {};
+            allDocs.forEach(d => map[d.doctor_id] = d);
+            parsed.forEach(d => map[d.doctor_id] = Object.assign(map[d.doctor_id] || {}, d));
+            combinedDocs = Object.values(map);
+          }
+        } catch (e) {}
+      }
+
+      const cleanTarget = inputIdOrName.toLowerCase().replace(/dr\.?/g, '').trim();
+      const docMatch = combinedDocs.find(d => 
+        d.doctor_id.toLowerCase() === inputIdOrName.toLowerCase() ||
+        d.doctor_name.toLowerCase() === inputIdOrName.toLowerCase() ||
+        (cleanTarget && d.doctor_name.toLowerCase().replace(/dr\.?/g, '').trim() === cleanTarget) ||
+        (cleanTarget && d.doctor_name.toLowerCase().includes(cleanTarget))
+      );
+
+      const targetDoctorId = docMatch ? docMatch.doctor_id : inputIdOrName;
 
       try {
         const response = await fetch('/api/v1/auth/verify-passcode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ doctor_id: doctorId, passcode })
+          body: JSON.stringify({ doctor_id: targetDoctorId, passcode })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
@@ -1393,14 +1454,9 @@
         sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
         updateHeaderUI();
         hideAuthModal();
-        showToast('Authenticated as Doctor', 'success');
+        showToast(`Authenticated as ${currentDoctor.doctor_name}`, 'success');
       } catch (err) {
-        const localDocMap = {
-          "DOC1001": { doctor_id: "DOC1001", passcode: "thyrocare123", doctor_name: "Dr. A. Sharma, MD", clinic_name: "Apex Diagnostic & Healthcare Clinic", is_active: true },
-          "DOC1002": { doctor_id: "DOC1002", passcode: "clinic456", doctor_name: "Dr. Priya Nair, MBBS, DNB", clinic_name: "Nair HealthCare & Diagnostics", is_active: true },
-          "DOC1003": { doctor_id: "DOC1003", passcode: "locked789", doctor_name: "Dr. Rajesh Verma, MD", clinic_name: "Metro Wellness Center", is_active: false }
-        };
-        const docMatch = localDocMap[doctorId.toUpperCase()];
+        // Fallback for static hosting / offline
         if (docMatch && docMatch.passcode === passcode) {
           if (!docMatch.is_active) {
             document.getElementById('authAlertMsg').textContent = 'Account Suspended / Access Revoked.';
@@ -1413,10 +1469,10 @@
           sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
           updateHeaderUI();
           hideAuthModal();
-          showToast('Authenticated as Doctor (Cloud Mode)', 'success');
+          showToast(`Authenticated as ${currentDoctor.doctor_name} (Cloud Mode)`, 'success');
           return;
         }
-        document.getElementById('authAlertMsg').textContent = err.message || 'Invalid Doctor ID or Passcode';
+        document.getElementById('authAlertMsg').textContent = err.message || 'Invalid Doctor ID/Name or Passcode';
         document.getElementById('authAlert').classList.remove('hidden');
       }
     }
