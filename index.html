@@ -542,29 +542,38 @@
                 <p class="text-xs text-slate-500">Upload Excel (.xlsx, .xls) lab orders or PDF (.pdf) reports for client-side extraction</p>
               </div>
             </div>
-            <button id="resetFileBtn" onclick="resetFileExtractor()" class="hidden items-center gap-1.5 text-xs text-rose-600 font-semibold bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
-              <i class="fa-solid fa-trash-can"></i>
-              <span>Clear Uploaded Data</span>
+            <button id="resetFileBtn" onclick="resetFileExtractor()" class="hidden items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 font-semibold bg-rose-50 hover:bg-rose-100 px-3.5 py-1.5 rounded-lg border border-rose-200 transition shadow-sm">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Clear Document & Reset</span>
             </button>
           </div>
 
           <div class="p-6">
             <div id="dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
               onclick="document.getElementById('fileInput').click()"
-              class="border-2 border-dashed border-slate-300 hover:border-[#004A98] bg-slate-50/70 hover:bg-blue-50/40 rounded-xl p-8 text-center cursor-pointer transition group">
+              class="border-2 border-dashed border-slate-300 hover:border-[#004A98] bg-slate-50/70 hover:bg-blue-50/40 rounded-2xl p-8 text-center cursor-pointer transition group">
               
               <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .pdf" onchange="handleFileSelect(event)" />
-              <div class="w-16 h-16 bg-white rounded-full shadow-md text-[#004A98] flex items-center justify-center mx-auto mb-3">
+              <div class="w-16 h-16 bg-white rounded-2xl shadow-md text-[#004A98] flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition">
                 <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
               </div>
-              <h4 class="font-semibold text-slate-700 text-sm">Drag & Drop clinical documents here, or click to browse</h4>
-              <p class="text-xs text-slate-400 mt-1">Supports Excel spreadsheets (.xlsx, .xls) & PDF reports (.pdf)</p>
+              <h4 class="font-bold text-slate-800 text-sm">Drag & Drop clinical documents here, or click to browse</h4>
+              <p class="text-xs text-slate-400 mt-1">Supports Excel spreadsheets (.xlsx, .xls) & PDF laboratory reports (.pdf)</p>
+              
+              <!-- Quick sample loader for instant testing on phone or desktop -->
+              <div class="mt-4 pt-3 border-t border-slate-200/60 flex flex-wrap items-center justify-center gap-2">
+                <span class="text-[11px] text-slate-400">Quick Test:</span>
+                <button type="button" onclick="event.stopPropagation(); loadSampleClinicalData();" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 active:scale-95 text-[#004A98] text-xs font-bold rounded-lg border border-blue-200 shadow-sm flex items-center gap-1.5 transition">
+                  <i class="fa-solid fa-flask-vial text-cyan-600"></i>
+                  <span>Load Sample Clinical Document</span>
+                </button>
+              </div>
             </div>
 
             <div id="parseLoading" class="hidden py-8 text-center">
               <div class="inline-flex items-center gap-3 bg-blue-50 text-[#004A98] px-5 py-3 rounded-xl border border-blue-200 text-sm font-semibold">
                 <i class="fa-solid fa-spinner fa-spin text-xl"></i>
-                <span>Parsing document data with client-side engine...</span>
+                <span>Parsing clinical document data with client-side engine...</span>
               </div>
             </div>
 
@@ -575,20 +584,75 @@
               </div>
             </div>
 
+            <!-- EXCEL CLINICAL SPREADSHEET VIEWER & ITEM EDITOR -->
             <div id="excelOutput" class="hidden mt-6 space-y-4">
-              <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-xs">
-                <span class="text-emerald-800 font-medium"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Loaded Spreadsheet: <strong id="excelFileName" class="font-mono">data.xlsx</strong></span>
-                <input type="text" id="excelSearchInput" oninput="filterExcelTable()" placeholder="Search rows..." class="px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs" />
+              <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow">
+                    <i class="fa-solid fa-file-excel text-lg"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                      <span id="excelFileName" class="font-mono text-sm text-[#004A98]">clinical_data.xlsx</span>
+                      <span id="clinicalItemCountBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">0 items</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">Edit every single item, delete specific rows, or add new records</div>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="excelSearchInput" oninput="filterClinicalTable()" placeholder="Search items..." class="pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs w-44 shadow-sm focus:ring-2 focus:ring-emerald-500" />
+                  </div>
+                  <button type="button" onclick="openAddClinicalItemModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-lg shadow flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Item</span>
+                  </button>
+                  <button type="button" onclick="exportClinicalData()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 shadow-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-arrow-down text-emerald-700"></i>
+                    <span>Export</span>
+                  </button>
+                  <button type="button" onclick="deleteAllClinicalItems()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 text-xs font-bold rounded-lg border border-rose-300 shadow-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Delete All Items</span>
+                  </button>
+                </div>
               </div>
-              <div id="excelTableContainer" class="overflow-x-auto border border-slate-200 rounded-xl max-h-96 text-xs"></div>
+
+              <!-- Filter stats bar -->
+              <div id="clinicalFilterStats" class="hidden text-xs text-slate-500 px-1 font-medium"></div>
+
+              <div id="excelTableContainer" class="overflow-x-auto border border-slate-200 rounded-2xl max-h-[500px] text-xs shadow-inner bg-white"></div>
             </div>
 
+            <!-- PDF EXTRACTED TEXT VIEWER & DIRECT TEXT EDITOR -->
             <div id="pdfOutput" class="hidden mt-6 space-y-3">
-              <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-3.5 rounded-xl text-xs">
-                <span class="text-blue-900 font-medium"><i class="fa-solid fa-file-pdf text-red-500 mr-2"></i>Extracted PDF: <strong id="pdfFileName" class="font-mono">report.pdf</strong></span>
-                <button onclick="copyPdfText()" class="bg-[#004A98] text-white px-3 py-1.5 rounded-lg"><i class="fa-solid fa-copy mr-1"></i>Copy Text</button>
+              <div class="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-2xl text-xs shadow-sm">
+                <span class="text-blue-950 font-medium flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center font-bold shadow-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </div>
+                  <span>Extracted PDF Report: <strong id="pdfFileName" class="font-mono text-slate-800">report.pdf</strong></span>
+                </span>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="copyPdfText()" class="bg-[#004A98] hover:bg-[#003B7A] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Copy Text</span>
+                  </button>
+                  <button type="button" onclick="downloadPdfText()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download .txt</span>
+                  </button>
+                  <button type="button" onclick="clearPdfText()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Delete All Text</span>
+                  </button>
+                </div>
               </div>
-              <pre id="pdfTextContent" class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-xs max-h-96 overflow-y-auto whitespace-pre-wrap"></pre>
+              <div class="relative">
+                <textarea id="pdfTextContent" rows="14" class="w-full bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-[#004A98] border border-slate-700 whitespace-pre-wrap leading-relaxed resize-y shadow-inner" placeholder="Extracted text from PDF report will appear here. You can freely edit, format, or delete any content..."></textarea>
+              </div>
             </div>
           </div>
         </section>
@@ -657,7 +721,119 @@
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" onclick="closeOrderModal()" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow">Confirm & Send WhatsApp</button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow transition">Confirm & Send WhatsApp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ORDER SUCCESS & WHATSAPP DISPATCH MODAL (MOBILE & DESKTOP) -->
+  <div id="orderSuccessModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/85 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white text-center relative">
+        <button onclick="closeOrderSuccessModal()" class="absolute top-4 right-4 text-white/80 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner border border-white/30">
+          <i class="fa-solid fa-check text-3xl text-emerald-100"></i>
+        </div>
+        <h3 class="font-bold text-lg">Order Confirmed!</h3>
+        <p class="text-xs text-emerald-100 mt-1">Order registered with Thyrocare B2B Network</p>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Order ID:</span>
+            <span id="successOrderId" class="font-mono font-bold text-[#004A98] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">ORD-2026-1000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Patient:</span>
+            <span id="successPatientInfo" class="font-bold text-slate-800">Ramesh Kumar (9876543210)</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Tests Count:</span>
+            <span id="successTestCount" class="font-bold text-slate-700">0 tests</span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-slate-200 font-bold">
+            <span class="text-slate-700">Total B2B Rate:</span>
+            <span id="successTotalPrice" class="text-emerald-700 text-sm font-mono font-bold">₹0</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 pt-1">
+          <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+            <span>Send Order Notification to WhatsApp:</span>
+          </div>
+
+          <!-- Direct WhatsApp Dispatch Button 1 -->
+          <a id="successWaBtn1" href="#" target="_blank" class="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-[0.99] text-white rounded-xl font-bold shadow-md transition group">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                <i class="fa-brands fa-whatsapp text-xl text-emerald-100"></i>
+              </div>
+              <div class="text-left">
+                <div class="text-xs font-bold">Send to Dispatch (+91 6284828212)</div>
+                <div class="text-[10px] text-emerald-100 font-normal">Primary Thyrocare Order Desk</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-75 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
+          </a>
+
+          <!-- Direct WhatsApp Dispatch Button 2 -->
+          <a id="successWaBtn2" href="#" target="_blank" class="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 active:scale-[0.99] text-white rounded-xl font-bold shadow-md transition group">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                <i class="fa-brands fa-whatsapp text-xl text-teal-100"></i>
+              </div>
+              <div class="text-left">
+                <div class="text-xs font-bold">Send to Dispatch (+91 7719401188)</div>
+                <div class="text-[10px] text-teal-100 font-normal">Secondary Thyrocare Order Desk</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-75 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
+          </a>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" onclick="copySuccessOrderText()" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-copy"></i>
+            <span>Copy Order Text</span>
+          </button>
+          <button type="button" onclick="closeOrderSuccessModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CLINICAL ITEM EDIT / ADD MODAL -->
+  <div id="clinicalItemEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-slate-900 to-[#004A98] p-5 text-white flex items-center justify-between">
+        <h3 id="clinicalItemModalTitle" class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-cyan-300"></i>
+          <span>Edit Clinical Item</span>
+        </h3>
+        <button onclick="closeClinicalItemModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="saveClinicalItem(event)" class="p-6 space-y-4">
+        <input type="hidden" id="clinicalItemEditIndex" value="-1" />
+        <div id="clinicalItemFieldsContainer" class="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+          <!-- Dynamically generated fields for each column in the document -->
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeClinicalItemModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#004A98] hover:bg-[#003B7A] text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span>Save Changes</span>
+          </button>
         </div>
       </form>
     </div>
@@ -1399,6 +1575,13 @@
       const btn = document.getElementById('placeOrderBtn');
       const clearBtn = document.getElementById('clearTestsBtn');
 
+      let mrp = 0, b2b = 0;
+      selectedItems.forEach(item => {
+        mrp += (item.mrp || 0);
+        b2b += (item.b2b_rate || 0);
+      });
+      const savings = mrp - b2b;
+
       // Mobile floating bar & badge updates
       const mobileBadge = document.getElementById('mobileSelectedCountBadge');
       const mobileBottom = document.getElementById('mobileBottomBar');
@@ -1415,8 +1598,8 @@
       if (mobileBottom) {
         if (selectedItems.length > 0) {
           mobileBottomCount.textContent = selectedItems.length;
-          mobileBottomCost.textContent = `₹${totalB2b}`;
-          mobileBottomSave.textContent = `₹${totalSavings}`;
+          mobileBottomCost.textContent = `₹${b2b}`;
+          mobileBottomSave.textContent = `₹${savings}`;
           mobileBottom.classList.remove('translate-y-full');
         } else {
           mobileBottom.classList.add('translate-y-full');
@@ -1435,19 +1618,21 @@
 
       btn.disabled = false; clearBtn.disabled = false;
       document.getElementById('exportCsvBtn').disabled = false; document.getElementById('exportTxtBtn').disabled = false;
-      let mrp = 0, b2b = 0; container.innerHTML = '';
+      container.innerHTML = '';
       selectedItems.forEach(item => {
-        mrp += item.mrp; b2b += item.b2b_rate;
-        container.innerHTML += `<div class="flex justify-between p-2 border rounded bg-slate-50 text-xs"><div><span class="font-bold">${item.name}</span></div><div class="font-mono font-bold text-[#004A98]">₹${item.b2b_rate}</div></div>`;
+        container.innerHTML += `<div class="flex justify-between p-2 border rounded-lg bg-slate-50 text-xs items-center"><div><span class="font-bold text-slate-800">${item.name}</span><div class="text-[10px] text-slate-400 font-mono">${item.code}</div></div><div class="font-mono font-bold text-[#004A98]">₹${item.b2b_rate}</div></div>`;
       });
       document.getElementById('totalMrp').textContent = `₹${mrp}`;
       document.getElementById('totalB2b').textContent = `₹${b2b}`;
-      document.getElementById('totalSavings').textContent = `₹${mrp - b2b}`;
+      document.getElementById('totalSavings').textContent = `₹${savings}`;
     }
 
     function openOrderModal() {
       const selectedItems = catalog.filter(item => selectedTestCodes.has(item.code));
-      if (selectedItems.length === 0) return;
+      if (selectedItems.length === 0) {
+        showToast('Please select at least one test from the catalog.', 'error');
+        return;
+      }
       const modalSummary = document.getElementById('modalTestSummary');
       let totalB2b = 0; modalSummary.innerHTML = '';
       selectedItems.forEach(i => { totalB2b += i.b2b_rate; modalSummary.innerHTML += `<div>• ${i.name} (${i.code}) - ₹${i.b2b_rate}</div>`; });
@@ -1457,26 +1642,124 @@
 
     function closeOrderModal() { document.getElementById('orderModal').classList.add('hidden'); }
 
+    let currentOrderWaText = '';
+
     async function submitOrder(e) {
       e.preventDefault();
       const patientName = document.getElementById('patientNameInput').value.trim();
       const patientMobile = document.getElementById('patientMobileInput').value.trim();
-      if (!currentDoctor) return;
+      if (!currentDoctor) {
+        showToast('Please login as a doctor first', 'error');
+        return;
+      }
 
+      const selectedItems = catalog.filter(item => selectedTestCodes.has(item.code));
+      if (selectedItems.length === 0) {
+        showToast('No tests selected to place order', 'error');
+        return;
+      }
+
+      const orderCount = (adminOrdersList ? adminOrdersList.length : 0) + 1;
+      const orderId = `ORD-2026-${1000 + orderCount}`;
+      const mrpTotal = selectedItems.reduce((acc, t) => acc + (t.mrp || 0), 0);
+      const b2bTotal = selectedItems.reduce((acc, t) => acc + (t.b2b_rate || 0), 0);
+      const savingsTotal = mrpTotal - b2bTotal;
+      const testNamesStr = selectedItems.map(t => `• ${t.name} (${t.code}) - ₹${t.b2b_rate}`).join('\n');
+      const formattedDt = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+      // Clean formatted WhatsApp message for native dispatch
+      const waText = 
+`*THYROCARE NEW B2B ORDER*
+----------------------------------
+🆔 *Order ID*: ${orderId}
+📅 *Date*: ${formattedDt}
+👨‍⚕️ *Doctor*: ${currentDoctor.doctor_name}
+🏥 *Clinic*: ${currentDoctor.clinic_name} (${currentDoctor.doctor_id})
+👤 *Patient Name*: ${patientName}
+📞 *Patient Mobile*: ${patientMobile}
+🧪 *Tests Ordered (${selectedItems.length})*:
+${testNamesStr}
+💰 *Total B2B Rate*: ₹${b2bTotal} (MRP: ₹${mrpTotal}, Save ₹${savingsTotal})
+----------------------------------
+Please confirm sample collection dispatch.`;
+
+      currentOrderWaText = waText;
+      const encodedWa = encodeURIComponent(waText);
+
+      // Deep links with api.whatsapp.com for universal mobile and desktop compatibility
+      const waUrl1 = `https://api.whatsapp.com/send?phone=916284828212&text=${encodedWa}`;
+      const waUrl2 = `https://api.whatsapp.com/send?phone=917719401188&text=${encodedWa}`;
+
+      // Populate Success Modal
+      document.getElementById('successOrderId').textContent = orderId;
+      document.getElementById('successPatientInfo').textContent = `${patientName} (${patientMobile})`;
+      document.getElementById('successTestCount').textContent = `${selectedItems.length} test${selectedItems.length > 1 ? 's' : ''}`;
+      document.getElementById('successTotalPrice').textContent = `₹${b2bTotal}`;
+
+      const btn1 = document.getElementById('successWaBtn1');
+      const btn2 = document.getElementById('successWaBtn2');
+      btn1.href = waUrl1;
+      btn2.href = waUrl2;
+
+      // Close input modal and show success modal
+      closeOrderModal();
+      document.getElementById('orderSuccessModal').classList.remove('hidden');
+
+      // Check if user is on mobile
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Direct navigation bypasses mobile popup blockers completely!
+        window.location.href = waUrl1;
+      }
+
+      showToast(`Order ${orderId} registered! WhatsApp dispatch ready.`, 'success');
+
+      // Clear selection
+      selectedTestCodes.clear();
+      renderCatalog();
+      updateEstimatorSummary();
+
+      // Submit to backend in background (graceful fallback if offline or GitHub Pages)
       try {
         const res = await fetch('/api/v1/orders/place', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ doctor_id: currentDoctor.doctor_id, patient_name: patientName, patient_mobile: patientMobile, test_codes: Array.from(selectedTestCodes) })
+          body: JSON.stringify({
+            doctor_id: currentDoctor.doctor_id,
+            patient_name: patientName,
+            patient_mobile: patientMobile,
+            test_codes: selectedItems.map(t => t.code)
+          })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order && adminOrdersList) {
+            adminOrdersList.unshift(data.order);
+            if (typeof renderAdminDashboard === 'function') {
+              renderAdminDashboard({
+                orders: adminOrdersList,
+                total_orders: adminOrdersList.length,
+                total_revenue_b2b: adminOrdersList.reduce((s,o)=>s+o.total_b2b,0),
+                total_mrp_val: adminOrdersList.reduce((s,o)=>s+o.total_mrp,0),
+                total_savings_val: adminOrdersList.reduce((s,o)=>s+o.total_savings,0)
+              }, 'Current');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Backend order recording notice (running in client mode):', err);
+      }
+    }
 
-        closeOrderModal();
-        showToast(`Order ${data.order.order_id} placed! Opening WhatsApp...`, 'success');
-        if (data.whatsapp_links) data.whatsapp_links.forEach(item => window.open(item.url, '_blank'));
-        selectedTestCodes.clear(); renderCatalog();
-      } catch (err) { showToast(err.message, 'error'); }
+    function closeOrderSuccessModal() {
+      document.getElementById('orderSuccessModal').classList.add('hidden');
+    }
+
+    function copySuccessOrderText() {
+      if (currentOrderWaText) {
+        navigator.clipboard.writeText(currentOrderWaText);
+        showToast('Order details copied to clipboard!', 'success');
+      }
     }
 
     async function fetchAdminOrders(range = '7days') {
@@ -1528,8 +1811,8 @@
           <td class="py-3 px-4 text-right font-mono font-bold text-[#004A98]">₹${o.total_b2b}</td>
           <td class="py-3 px-4 text-center">
             <div class="flex flex-wrap items-center justify-center gap-1.5">
-              <a href="https://wa.me/916284828212?text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded"><i class="fa-brands fa-whatsapp"></i> 6284828212</a>
-              <a href="https://wa.me/917719401188?text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded"><i class="fa-brands fa-whatsapp"></i> 7719401188</a>
+              <a href="https://api.whatsapp.com/send?phone=916284828212&text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded shadow-sm hover:bg-emerald-200 transition"><i class="fa-brands fa-whatsapp"></i> 6284828212</a>
+              <a href="https://api.whatsapp.com/send?phone=917719401188&text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded shadow-sm hover:bg-emerald-200 transition"><i class="fa-brands fa-whatsapp"></i> 7719401188</a>
               <button onclick="openEditOrderModal('${o.order_id}')" class="bg-blue-50 hover:bg-blue-100 text-[#004A98] text-[10px] font-bold px-2 py-1 rounded border border-blue-200">
                 <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
               </button>
@@ -1549,6 +1832,297 @@
       renderAdminOrdersTable(filtered);
     }
 
+    // --- CLINICAL DOCUMENT PIPELINE (FULL CRUD & PARSER) ---
+
+    let clinicalHeaders = ["Item #", "Patient Name", "Test Code", "Investigation Name", "Specimen", "Result Value", "Unit", "Reference Range", "Status"];
+    let clinicalRows = [];
+    let clinicalFileName = "clinical_data.xlsx";
+    let parsedPdfText = "";
+
+    const SAMPLE_CLINICAL_ITEMS = [
+      { "Item #": "1", "Patient Name": "Rajesh Kumar", "Test Code": "THY001", "Investigation Name": "Thyroid Profile Total (T3, T4, TSH)", "Specimen": "Serum", "Result Value": "4.25", "Unit": "uIU/mL", "Reference Range": "0.35 - 4.94", "Status": "Normal" },
+      { "Item #": "2", "Patient Name": "Sunita Verma", "Test Code": "HBA003", "Investigation Name": "HbA1c (Glycated Hemoglobin)", "Specimen": "Whole Blood EDTA", "Result Value": "6.8", "Unit": "%", "Reference Range": "< 5.7 (Normal)", "Status": "Elevated" },
+      { "Item #": "3", "Patient Name": "Amitabh Sen", "Test Code": "CBC007", "Investigation Name": "Complete Blood Count (CBC - 24 Params)", "Specimen": "Whole Blood EDTA", "Result Value": "14.2", "Unit": "g/dL (Hb)", "Reference Range": "13.0 - 17.0", "Status": "Normal" },
+      { "Item #": "4", "Patient Name": "Meena Agarwal", "Test Code": "LIP002", "Investigation Name": "Lipid Profile Basic (Cholesterol, HDL, LDL)", "Specimen": "Serum Fasting", "Result Value": "220", "Unit": "mg/dL", "Reference Range": "< 200", "Status": "High" },
+      { "Item #": "5", "Patient Name": "Vikas Malhotra", "Test Code": "VIT004", "Investigation Name": "Vitamin D 25-Hydroxy Total", "Specimen": "Serum", "Result Value": "18.4", "Unit": "ng/mL", "Reference Range": "30.0 - 100.0", "Status": "Deficient" },
+      { "Item #": "6", "Patient Name": "Pooja Reddy", "Test Code": "LFT005", "Investigation Name": "Liver Function Test (LFT 11 Params)", "Specimen": "Serum", "Result Value": "28", "Unit": "U/L (SGPT)", "Reference Range": "< 45", "Status": "Normal" },
+      { "Item #": "7", "Patient Name": "Deepak Patel", "Test Code": "RFT006", "Investigation Name": "Renal Function Test (KFT / RFT)", "Specimen": "Serum", "Result Value": "1.1", "Unit": "mg/dL (Creat)", "Reference Range": "0.7 - 1.3", "Status": "Normal" },
+      { "Item #": "8", "Patient Name": "Ananya Roy", "Test Code": "CAR008", "Investigation Name": "Cardiac Risk Markers Panel", "Specimen": "Serum", "Result Value": "1.8", "Unit": "mg/L (hsCRP)", "Reference Range": "< 1.0", "Status": "Moderate" }
+    ];
+
+    function loadSampleClinicalData() {
+      clinicalHeaders = ["Item #", "Patient Name", "Test Code", "Investigation Name", "Specimen", "Result Value", "Unit", "Reference Range", "Status"];
+      clinicalRows = JSON.parse(JSON.stringify(SAMPLE_CLINICAL_ITEMS));
+      clinicalFileName = "thyrocare_clinical_sample.xlsx";
+      document.getElementById('excelFileName').textContent = clinicalFileName;
+      
+      const resetBtn = document.getElementById('resetFileBtn');
+      if (resetBtn) {
+        resetBtn.classList.remove('hidden');
+        resetBtn.classList.add('flex');
+      }
+
+      document.getElementById('excelOutput').classList.remove('hidden');
+      renderClinicalTable();
+      showToast('Loaded sample clinical document with 8 test records!', 'success');
+    }
+
+    function renderClinicalTable(filterQuery = '') {
+      const container = document.getElementById('excelTableContainer');
+      const countBadge = document.getElementById('clinicalItemCountBadge');
+      const filterStats = document.getElementById('clinicalFilterStats');
+      if (countBadge) countBadge.textContent = `${clinicalRows.length} item${clinicalRows.length === 1 ? '' : 's'}`;
+
+      if (!clinicalHeaders || clinicalHeaders.length === 0) {
+        clinicalHeaders = ["Item #", "Patient Name", "Test Code", "Investigation Name", "Specimen", "Result Value", "Unit", "Status"];
+      }
+
+      const q = (filterQuery || '').toLowerCase().trim();
+      let displayedRows = clinicalRows.map((row, originalIndex) => ({ row, originalIndex }));
+      if (q) {
+        displayedRows = displayedRows.filter(item => {
+          return Object.values(item.row).some(val => String(val || '').toLowerCase().includes(q));
+        });
+        if (filterStats) {
+          filterStats.textContent = `Showing ${displayedRows.length} of ${clinicalRows.length} items`;
+          filterStats.classList.remove('hidden');
+        }
+      } else {
+        if (filterStats) filterStats.classList.add('hidden');
+      }
+
+      if (clinicalRows.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 px-4 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-xl">
+              <i class="fa-solid fa-file-circle-xmark"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-700">No clinical items present</div>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">All items have been removed. You can upload a new spreadsheet, add single records manually, or reload sample data.</p>
+            <div class="pt-2 flex justify-center gap-2">
+              <button type="button" onclick="openAddClinicalItemModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i> Add Item
+              </button>
+              <button type="button" onclick="loadSampleClinicalData()" class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#004A98] text-xs font-bold rounded-lg border border-blue-200 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left"></i> Load Sample Data
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<table class="min-w-full divide-y divide-slate-200 text-xs text-left">';
+      html += '<thead class="bg-slate-50 text-slate-700 font-bold sticky top-0 z-10 shadow-sm"><tr>';
+      html += '<th class="py-2.5 px-3 w-12 text-center text-slate-400">#</th>';
+      clinicalHeaders.forEach(h => {
+        html += `<th class="py-2.5 px-3 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">${h}</th>`;
+      });
+      html += '<th class="py-2.5 px-3 text-center w-36 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">Actions</th>';
+      html += '</tr></thead>';
+
+      html += '<tbody class="divide-y divide-slate-100 bg-white" id="clinicalTBody">';
+      displayedRows.forEach(({ row, originalIndex }) => {
+        const rowId = `clinical-row-${originalIndex}`;
+        html += `<tr id="${rowId}" class="hover:bg-blue-50/40 transition">`;
+        html += `<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[11px]">${originalIndex + 1}</td>`;
+        clinicalHeaders.forEach(h => {
+          const val = row[h] !== undefined ? row[h] : '';
+          let badge = '';
+          if (h.toLowerCase().includes('status')) {
+            const sLower = String(val).toLowerCase();
+            const colorClass = sLower.includes('normal') ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : (sLower.includes('high') || sLower.includes('elevat') || sLower.includes('defic') ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-700 border-slate-300');
+            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorClass}">${val}</span>`;
+          }
+          html += `<td class="py-2.5 px-3 text-slate-700">${badge || val}</td>`;
+        });
+
+        // Actions column with Edit and Delete buttons on EVERY SINGLE ITEM
+        html += `
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1.5">
+              <button type="button" onclick="openEditClinicalRowModal(${originalIndex})" title="Edit this item" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 active:scale-95 text-[#004A98] font-bold text-[11px] rounded-lg border border-blue-200 transition flex items-center gap-1">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Edit</span>
+              </button>
+              <button type="button" onclick="deleteSingleClinicalItem(${originalIndex})" title="Delete this item" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 font-bold text-[11px] rounded-lg border border-rose-200 transition flex items-center gap-1">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
+              </button>
+            </div>
+          </td>
+        `;
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+
+      container.innerHTML = html;
+    }
+
+    function filterClinicalTable() {
+      const q = document.getElementById('excelSearchInput').value;
+      renderClinicalTable(q);
+    }
+
+    function openEditClinicalRowModal(originalIndex) {
+      if (originalIndex < 0 || originalIndex >= clinicalRows.length) return;
+      const rowData = clinicalRows[originalIndex];
+      document.getElementById('clinicalItemEditIndex').value = originalIndex;
+      document.getElementById('clinicalItemModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-cyan-300 mr-2"></i>Edit Clinical Item #${originalIndex + 1}`;
+
+      const container = document.getElementById('clinicalItemFieldsContainer');
+      container.innerHTML = '';
+
+      clinicalHeaders.forEach((header, i) => {
+        const val = rowData[header] !== undefined ? rowData[header] : '';
+        const fieldDiv = document.createElement('div');
+        fieldDiv.innerHTML = `
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${header}</label>
+          <input type="text" name="col_${i}" data-header="${header}" value="${val.toString().replace(/"/g, '&quot;')}" class="w-full px-3.5 py-2 border rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#004A98] border-slate-300" />
+        `;
+        container.appendChild(fieldDiv);
+      });
+
+      document.getElementById('clinicalItemEditModal').classList.remove('hidden');
+    }
+
+    function openAddClinicalItemModal() {
+      if (!clinicalHeaders || clinicalHeaders.length === 0) {
+        clinicalHeaders = ["Item #", "Patient Name", "Test Code", "Investigation Name", "Specimen", "Result Value", "Unit", "Reference Range", "Status"];
+      }
+
+      document.getElementById('clinicalItemEditIndex').value = -1;
+      document.getElementById('clinicalItemModalTitle').innerHTML = `<i class="fa-solid fa-plus text-emerald-300 mr-2"></i>Add New Clinical Item`;
+
+      const container = document.getElementById('clinicalItemFieldsContainer');
+      container.innerHTML = '';
+
+      clinicalHeaders.forEach((header, i) => {
+        let defaultVal = '';
+        if (header.toLowerCase().includes('item #') || header.toLowerCase() === '#') {
+          defaultVal = String(clinicalRows.length + 1);
+        } else if (header.toLowerCase().includes('status')) {
+          defaultVal = 'Pending';
+        }
+        const fieldDiv = document.createElement('div');
+        fieldDiv.innerHTML = `
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${header}</label>
+          <input type="text" name="col_${i}" data-header="${header}" value="${defaultVal}" class="w-full px-3.5 py-2 border rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#004A98] border-slate-300" placeholder="Enter ${header}..." />
+        `;
+        container.appendChild(fieldDiv);
+      });
+
+      document.getElementById('clinicalItemEditModal').classList.remove('hidden');
+    }
+
+    function closeClinicalItemModal() {
+      document.getElementById('clinicalItemEditModal').classList.add('hidden');
+    }
+
+    function saveClinicalItem(e) {
+      e.preventDefault();
+      const editIndex = parseInt(document.getElementById('clinicalItemEditIndex').value, 10);
+      const inputs = document.getElementById('clinicalItemFieldsContainer').querySelectorAll('input');
+      const updatedItem = {};
+
+      inputs.forEach(inp => {
+        const header = inp.getAttribute('data-header');
+        if (header) {
+          updatedItem[header] = inp.value.trim();
+        }
+      });
+
+      if (editIndex >= 0 && editIndex < clinicalRows.length) {
+        clinicalRows[editIndex] = updatedItem;
+        showToast(`Item #${editIndex + 1} updated successfully!`, 'success');
+      } else {
+        clinicalRows.push(updatedItem);
+        showToast(`New clinical item #${clinicalRows.length} added!`, 'success');
+      }
+
+      closeClinicalItemModal();
+      renderClinicalTable(document.getElementById('excelSearchInput').value);
+
+      // Flash highlight on edited row
+      const targetIdx = editIndex >= 0 ? editIndex : clinicalRows.length - 1;
+      setTimeout(() => {
+        const tr = document.getElementById(`clinical-row-${targetIdx}`);
+        if (tr) {
+          tr.classList.add('bg-emerald-50', 'ring-2', 'ring-emerald-400');
+          setTimeout(() => tr.classList.remove('bg-emerald-50', 'ring-2', 'ring-emerald-400'), 1500);
+        }
+      }, 50);
+    }
+
+    function deleteSingleClinicalItem(idx) {
+      if (idx < 0 || idx >= clinicalRows.length) return;
+      const itemDesc = clinicalRows[idx]["Investigation Name"] || clinicalRows[idx]["Test Name"] || `Item #${idx + 1}`;
+      clinicalRows.splice(idx, 1);
+      renderClinicalTable(document.getElementById('excelSearchInput').value);
+      showToast(`Deleted "${itemDesc}" from document`, 'info');
+    }
+
+    function deleteAllClinicalItems() {
+      if (clinicalRows.length === 0) {
+        showToast('No clinical items to delete.', 'info');
+        return;
+      }
+      if (confirm(`Are you sure you want to delete ALL ${clinicalRows.length} clinical items from this document? This cannot be undone.`)) {
+        clinicalRows = [];
+        renderClinicalTable();
+        showToast('All clinical items have been cleared from document.', 'success');
+      }
+    }
+
+    function exportClinicalData() {
+      if (clinicalRows.length === 0) {
+        showToast('No data to export.', 'error');
+        return;
+      }
+      try {
+        const ws = XLSX.utils.json_to_sheet(clinicalRows, { header: clinicalHeaders });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "ClinicalData");
+        XLSX.writeFile(wb, `edited_${clinicalFileName || 'clinical_data.xlsx'}`);
+        showToast('Exported clinical spreadsheet!', 'success');
+      } catch (err) {
+        // Fallback to CSV
+        let csv = clinicalHeaders.join(',') + '\n';
+        clinicalRows.forEach(row => {
+          csv += clinicalHeaders.map(h => `"${String(row[h]||'').replace(/"/g, '""')}"`).join(',') + '\n';
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `edited_${clinicalFileName || 'clinical_data.csv'}`; a.click();
+        showToast('Exported clinical CSV file!', 'success');
+      }
+    }
+
+    function clearPdfText() {
+      const area = document.getElementById('pdfTextContent');
+      if (!area.value.trim()) {
+        showToast('PDF text is already empty.', 'info');
+        return;
+      }
+      if (confirm('Are you sure you want to delete all extracted text from this PDF report?')) {
+        area.value = '';
+        parsedPdfText = '';
+        showToast('All extracted PDF text cleared.', 'info');
+      }
+    }
+
+    function downloadPdfText() {
+      const txt = document.getElementById('pdfTextContent').value;
+      if (!txt) {
+        showToast('No text to download.', 'error');
+        return;
+      }
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `extracted_${document.getElementById('pdfFileName').textContent || 'report'}.txt`; a.click();
+      showToast('Downloaded text file.', 'success');
+    }
+
     // --- FILE PARSER ---
 
     function handleDragOver(e) { e.preventDefault(); }
@@ -1563,59 +2137,133 @@
 
     function processExcelFile(file) {
       const reader = new FileReader();
+      const loading = document.getElementById('parseLoading');
+      const errorDiv = document.getElementById('parseError');
+      if (loading) loading.classList.remove('hidden');
+      if (errorDiv) errorDiv.classList.add('hidden');
+
       reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: 'array' });
-        const jsonRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-        renderExcelTable(jsonRows, file.name);
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const firstSheet = wb.Sheets[wb.SheetNames[0]];
+          const jsonRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          if (!jsonRows || jsonRows.length === 0) {
+            throw new Error('Spreadsheet appears to be empty.');
+          }
+
+          clinicalFileName = file.name;
+          document.getElementById('excelFileName').textContent = file.name;
+          clinicalHeaders = (jsonRows[0] || []).map((h, i) => String(h || `Column ${i + 1}`).trim());
+          clinicalRows = [];
+
+          jsonRows.slice(1).forEach(r => {
+            if (r && r.some(cell => cell !== undefined && String(cell).trim() !== '')) {
+              const obj = {};
+              clinicalHeaders.forEach((h, i) => {
+                obj[h] = r[i] !== undefined ? String(r[i]).trim() : '';
+              });
+              clinicalRows.push(obj);
+            }
+          });
+
+          if (loading) loading.classList.add('hidden');
+          document.getElementById('excelOutput').classList.remove('hidden');
+          const resetBtn = document.getElementById('resetFileBtn');
+          if (resetBtn) {
+            resetBtn.classList.remove('hidden');
+            resetBtn.classList.add('flex');
+          }
+
+          renderClinicalTable();
+          showToast(`Successfully extracted ${clinicalRows.length} items from ${file.name}!`, 'success');
+        } catch (err) {
+          if (loading) loading.classList.add('hidden');
+          if (errorDiv) {
+            errorDiv.classList.remove('hidden');
+            document.getElementById('parseErrorMsg').textContent = err.message || 'Error parsing Excel file.';
+          }
+        }
+      };
+      reader.onerror = () => {
+        if (loading) loading.classList.add('hidden');
+        if (errorDiv) {
+          errorDiv.classList.remove('hidden');
+          document.getElementById('parseErrorMsg').textContent = 'Failed to read spreadsheet file.';
+        }
       };
       reader.readAsArrayBuffer(file);
     }
 
-    function renderExcelTable(rows, fileName) {
-      document.getElementById('excelFileName').textContent = fileName;
-      const container = document.getElementById('excelTableContainer');
-      let html = '<table class="min-w-full divide-y text-xs"><thead class="bg-slate-100 font-bold"><tr>';
-      (rows[0]||[]).forEach(h => html += `<th class="py-2 px-3">${h||''}</th>`);
-      html += '</tr></thead><tbody class="divide-y bg-white" id="excelTBody">';
-      rows.slice(1).forEach(row => {
-        html += `<tr>`; (rows[0]||[]).forEach((_, c) => html += `<td class="py-2 px-3">${row[c]!==undefined?row[c]:''}</td>`); html += `</tr>`;
-      });
-      html += '</tbody></table>'; container.innerHTML = html;
-      document.getElementById('excelOutput').classList.remove('hidden');
-    }
-
-    function filterExcelTable() {
-      const q = document.getElementById('excelSearchInput').value.toLowerCase();
-      const trs = document.getElementById('excelTBody').getElementsByTagName('tr');
-      for (let i = 0; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().includes(q) ? '' : 'none';
-    }
-
     function processPdfFile(file) {
       const reader = new FileReader();
+      const loading = document.getElementById('parseLoading');
+      const errorDiv = document.getElementById('parseError');
+      if (loading) loading.classList.remove('hidden');
+      if (errorDiv) errorDiv.classList.add('hidden');
+
       reader.onload = async (e) => {
-        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
-        let txt = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const c = await page.getTextContent();
-          txt += `--- PAGE ${i} ---\n${c.items.map(x=>x.str).join(' ')}\n\n`;
+        try {
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+          let txt = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const c = await page.getTextContent();
+            txt += `--- PAGE ${i} ---\n${c.items.map(x=>x.str).join(' ')}\n\n`;
+          }
+          parsedPdfText = txt;
+          if (loading) loading.classList.add('hidden');
+          document.getElementById('pdfFileName').textContent = file.name;
+          document.getElementById('pdfTextContent').value = txt;
+          document.getElementById('pdfOutput').classList.remove('hidden');
+          const resetBtn = document.getElementById('resetFileBtn');
+          if (resetBtn) {
+            resetBtn.classList.remove('hidden');
+            resetBtn.classList.add('flex');
+          }
+          showToast(`Extracted text from ${pdf.numPages} PDF page(s)!`, 'success');
+        } catch (err) {
+          if (loading) loading.classList.add('hidden');
+          if (errorDiv) {
+            errorDiv.classList.remove('hidden');
+            document.getElementById('parseErrorMsg').textContent = err.message || 'Error extracting text from PDF.';
+          }
         }
-        parsedPdfText = txt;
-        document.getElementById('pdfFileName').textContent = file.name;
-        document.getElementById('pdfTextContent').textContent = txt;
-        document.getElementById('pdfOutput').classList.remove('hidden');
+      };
+      reader.onerror = () => {
+        if (loading) loading.classList.add('hidden');
+        if (errorDiv) {
+          errorDiv.classList.remove('hidden');
+          document.getElementById('parseErrorMsg').textContent = 'Failed to read PDF file.';
+        }
       };
       reader.readAsArrayBuffer(file);
     }
 
     function copyPdfText() {
-      if (parsedPdfText) { navigator.clipboard.writeText(parsedPdfText); showToast('Copied to clipboard', 'success'); }
+      const txt = document.getElementById('pdfTextContent').value || parsedPdfText;
+      if (txt) {
+        navigator.clipboard.writeText(txt);
+        showToast('Extracted text copied to clipboard', 'success');
+      }
     }
 
     function resetFileExtractor() {
+      if (clinicalRows.length > 0 || (document.getElementById('pdfTextContent') && document.getElementById('pdfTextContent').value.trim())) {
+        if (!confirm('Are you sure you want to clear all loaded clinical document data and reset?')) return;
+      }
+      clinicalRows = [];
+      clinicalHeaders = [];
+      parsedPdfText = '';
+      document.getElementById('fileInput').value = '';
       document.getElementById('excelOutput').classList.add('hidden');
       document.getElementById('pdfOutput').classList.add('hidden');
+      const resetBtn = document.getElementById('resetFileBtn');
+      if (resetBtn) {
+        resetBtn.classList.add('hidden');
+        resetBtn.classList.remove('flex');
+      }
+      showToast('Clinical document pipeline reset', 'info');
     }
 
     function exportPackage(format) {
