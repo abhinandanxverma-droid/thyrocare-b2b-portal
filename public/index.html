@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thyrocare B2B Doctor & Admin Portal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thyro: {
+              blue: '#004A98',
+              navy: '#002E60',
+              accent: '#00A3E0',
+              bg: '#F8FAFC'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- SheetJS & PDF.js CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body class="h-full text-slate-800 antialiased flex flex-col min-h-screen bg-slate-50">
+
+  <!-- ========================================== -->
+  <!-- 1. DOCTOR AUTH LOCK OVERLAY MODAL          -->
+  <!-- ========================================== -->
+  <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4 transition-all duration-300">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      
+      <div class="bg-gradient-to-r from-[#002E60] to-[#004A98] p-6 text-white text-center relative overflow-hidden">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-2xl mb-3 border border-white/20">
+          <i class="fa-solid fa-stethoscope text-2xl text-cyan-300"></i>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">THYROCARE B2B</h1>
+        <p class="text-xs text-cyan-200 mt-1 uppercase tracking-wider font-semibold">Doctor Authentication Portal</p>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-6">
+        <div id="authAlert" class="hidden p-3 rounded-lg text-sm flex items-start gap-2.5 bg-rose-50 border border-rose-200 text-rose-700">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500"></i>
+          <span id="authAlertMsg">Invalid credentials.</span>
+        </div>
+
+        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Doctor ID</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fa-solid fa-user-doctor"></i>
+              </span>
+              <input type="text" id="doctorIdInput" required placeholder="e.g. DOC1001" 
+                class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#00A3E0] focus:border-[#004A98] text-sm uppercase font-mono tracking-wider font-medium outline-none transition" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Secure Passcode</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fa-solid fa-key"></i>
+              </span>
+              <input type="password" id="passcodeInput" required placeholder="••••••••" 
+                class="w-full pl-10 pr-10 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#00A3E0] focus:border-[#004A98] text-sm outline-none transition" />
+              <button type="button" onclick="togglePasscodeVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                <i id="passcodeEyeIcon" class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtn" 
+            class="w-full py-3 px-4 bg-[#004A98] hover:bg-[#002E60] text-white font-semibold rounded-lg shadow-md transition flex items-center justify-center gap-2 text-sm">
+            <span id="loginBtnSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+            <span>Authenticate Doctor Access</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </form>
+
+        <div class="pt-4 border-t border-slate-100">
+          <p class="text-xs font-semibold text-slate-500 mb-2">Demo Doctor Accounts (Click to Auto-fill):</p>
+          <div class="grid grid-cols-1 gap-2">
+            <button onclick="fillDemo('DOC1001', 'thyrocare123')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 bg-slate-50 hover:bg-blue-50/50 text-xs transition group">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700 group-hover:text-[#004A98]">DOC1001 - Dr. A. Sharma (Active)</span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Active</span>
+              </div>
+            </button>
+            <button onclick="fillDemo('DOC1002', 'clinic456')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 bg-slate-50 hover:bg-blue-50/50 text-xs transition group">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700 group-hover:text-[#004A98]">DOC1002 - Dr. Priya Nair (Active)</span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Active</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 2. ADMIN AUTH LOCK MODAL                   -->
+  <!-- ========================================== -->
+  <div id="adminAuthModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white text-center">
+        <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-2 text-xl">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h3 class="font-bold text-lg">Admin Authentication</h3>
+        <p class="text-xs text-slate-400">Restricted Administrator Area</p>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+        <div id="adminAuthAlert" class="hidden p-3 rounded-lg text-xs bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+          <span id="adminAuthAlertMsg">Invalid Admin Password.</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Admin Password</label>
+          <input type="password" id="adminPasswordInput" required placeholder="••••••••••••" 
+            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAdminAuthModal()" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg shadow transition">
+            Unlock Admin Console
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 3. LOGGED-IN DOCTOR SELF-EDIT PROFILE MODAL-->
+  <!-- ========================================== -->
+  <div id="doctorSelfEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-[#002E60] to-[#004A98] p-5 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-gear text-cyan-300 text-lg"></i>
+          <h3 class="font-bold text-base">Edit Doctor Account Profile</h3>
+        </div>
+        <button onclick="closeDoctorSelfEditModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleDoctorSelfEditSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Doctor ID (Read Only)</label>
+          <input type="text" id="selfEditDocId" readonly class="w-full px-3.5 py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-mono font-bold text-slate-700" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Doctor Full Name *</label>
+          <input type="text" id="selfEditDocName" required class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Clinic / Hospital Name *</label>
+          <input type="text" id="selfEditDocClinic" required class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Change Passcode / Password</label>
+          <input type="password" id="selfEditDocPasscode" placeholder="Leave blank to keep current passcode" class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+          <p class="text-[11px] text-slate-400 mt-0.5">Only fill if you wish to set a new login passcode.</p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeDoctorSelfEditModal()" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#004A98] text-white font-bold text-xs rounded-lg shadow">Save Profile Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 4. MAIN DASHBOARD HEADER & CONTENT         -->
+  <!-- ========================================== -->
+  <div id="mainDashboard" class="flex-1 flex flex-col">
+    
+    <header class="bg-[#002E60] text-white sticky top-0 z-40 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-3">
+            <div class="bg-white/10 p-2 rounded-lg border border-white/20">
+              <i class="fa-solid fa-microscope text-cyan-400 text-xl"></i>
+            </div>
+            <div>
+              <h2 class="font-bold text-lg leading-none tracking-wide text-white">THYROCARE <span class="text-cyan-400 font-normal">B2B</span></h2>
+              <p class="text-[11px] text-slate-300 font-medium">Doctor Partner Portal</p>
+            </div>
+          </div>
+
+          <nav class="hidden md:flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/15">
+            <button onclick="switchTab('doctor')" id="tabDoctorBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-cyan-500 text-slate-950 shadow">
+              <i class="fa-solid fa-stethoscope mr-1.5"></i> Doctor Portal
+            </button>
+            <button onclick="attemptAdminAccess()" id="tabAdminBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition">
+              <i class="fa-solid fa-user-shield mr-1.5"></i> Admin Console
+            </button>
+          </nav>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- LOGGED-IN DOCTOR INFO WITH EDIT PROFILE BUTTON -->
+          <div class="hidden sm:flex items-center gap-3 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15">
+            <div class="w-8 h-8 rounded-full bg-[#00A3E0] flex items-center justify-center text-white font-bold text-xs">
+              <i class="fa-solid fa-user-md"></i>
+            </div>
+            <div class="text-left leading-tight">
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span id="headerDoctorName">Dr. Authenticated</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400" title="Session Active"></span>
+                <button onclick="openDoctorSelfEditModal()" title="Edit My Doctor Profile & Passcode" 
+                  class="ml-1 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 hover:text-white text-[10px] font-semibold px-2 py-0.5 rounded border border-cyan-400/30 transition flex items-center gap-1">
+                  <i class="fa-solid fa-pen"></i> Edit Profile
+                </button>
+              </div>
+              <div class="text-[10px] text-cyan-200">
+                <span id="headerClinicName">Partner Clinic</span> • ID: <span id="headerDoctorId" class="font-mono font-bold">DOC000</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="lockPortal('Manual Logout')" class="inline-flex items-center gap-2 bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-sm border border-rose-500/50">
+            <i class="fa-solid fa-lock"></i>
+            <span>Lock Portal</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Mobile Tab Switcher -->
+    <div class="md:hidden bg-slate-800 p-2 flex justify-center gap-2 border-b border-slate-700">
+      <button onclick="switchTab('doctor')" id="tabDoctorBtnMobile" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500 text-slate-950">
+        <i class="fa-solid fa-stethoscope mr-1"></i> Doctor Portal
+      </button>
+      <button onclick="attemptAdminAccess()" id="tabAdminBtnMobile" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 bg-slate-700">
+        <i class="fa-solid fa-user-shield mr-1"></i> Admin Console
+      </button>
+    </div>
+
+    <!-- WhatsApp Dispatch Banner -->
+    <div class="bg-slate-900 text-slate-300 text-xs py-1.5 px-4 flex items-center justify-between border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="bg-emerald-500/20 text-emerald-400 font-mono font-bold px-1.5 py-0.5 rounded text-[10px] uppercase">WhatsApp Dispatch</span>
+        <span>Order notifications target <code class="font-mono text-cyan-300">+91 6284828212</code> & <code class="font-mono text-cyan-300">+91 7719401188</code></span>
+      </div>
+      <div class="text-[11px] text-amber-300 font-mono font-semibold">
+        <i class="fa-solid fa-shield-halved mr-1"></i> Doctor Profile & Admin Editing Active
+      </div>
+    </div>
+
+
+    <!-- VIEW 1: DOCTOR PORTAL DASHBOARD -->
+    <div id="doctorPortalView" class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 flex-1">
+
+      <!-- Catalog & Estimator Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-800 text-base">Thyrocare B2B Diagnostic Catalog</h3>
+              <span id="catalogCountBadge" class="bg-blue-100 text-[#004A98] text-xs font-bold px-2.5 py-1 rounded-full">0 Tests</span>
+            </div>
+            <input type="text" id="catalogSearchInput" oninput="renderCatalog()" placeholder="Search by Test Code, Test Name, or Specimen..." 
+              class="w-full px-3.5 py-2.5 bg-white rounded-xl border border-slate-300 text-xs outline-none focus:border-[#004A98]" />
+          </div>
+
+          <div class="p-5 flex-1 overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                  <th class="py-2.5 px-3 text-center">Select</th>
+                  <th class="py-2.5 px-3">Code & Test Name</th>
+                  <th class="py-2.5 px-3">Specimen</th>
+                  <th class="py-2.5 px-3 text-right">Standard MRP</th>
+                  <th class="py-2.5 px-3 text-right">B2B Rate</th>
+                  <th class="py-2.5 px-3 text-right">Margin Savings</th>
+                </tr>
+              </thead>
+              <tbody id="catalogTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 sticky top-20">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-800 text-base">Custom Panel Estimator</h3>
+              
+              <div class="flex items-center gap-2">
+                <button onclick="clearSelectedTests()" id="clearTestsBtn" disabled
+                  class="text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-md border border-rose-200 transition disabled:opacity-40">
+                  <i class="fa-solid fa-trash-arrow-up mr-1"></i>Clear All Tests
+                </button>
+                <span id="selectedCount" class="text-xs bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-full">0 Items</span>
+              </div>
+            </div>
+
+            <div id="selectedItemsContainer" class="space-y-2 max-h-44 overflow-y-auto"></div>
+
+            <div class="bg-gradient-to-br from-slate-900 to-[#002E60] rounded-xl p-5 text-white space-y-3 shadow-md">
+              <div class="flex justify-between text-xs text-slate-300"><span>Retail MRP:</span><span id="totalMrp" class="font-mono">₹0</span></div>
+              <div class="flex justify-between text-xs text-cyan-200"><span>B2B Cost:</span><span id="totalB2b" class="font-mono font-bold text-cyan-300">₹0</span></div>
+              <div class="flex justify-between pt-2 border-t border-white/10">
+                <span class="text-xs font-bold text-emerald-400">Doctor Savings</span>
+                <span id="totalSavings" class="font-mono text-xl font-bold text-emerald-400">₹0</span>
+              </div>
+            </div>
+
+            <button onclick="openOrderModal()" id="placeOrderBtn" disabled
+              class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 disabled:opacity-40 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2">
+              <i class="fa-brands fa-whatsapp text-lg text-emerald-200"></i>
+              <span>Place Order & Dispatch via WhatsApp</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="exportPackage('csv')" id="exportCsvBtn" disabled class="py-2.5 bg-slate-700 text-white rounded-lg text-xs font-medium"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button>
+              <button onclick="exportPackage('txt')" id="exportTxtBtn" disabled class="py-2.5 bg-[#004A98] text-white rounded-lg text-xs font-medium"><i class="fa-solid fa-file-lines mr-1"></i>Clinical Summary</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- VIEW 2: ADMIN CONSOLE (ORDERS + DOCTORS) -->
+    <div id="adminPortalView" class="hidden max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Administrator Console</h2>
+            <p class="text-xs text-slate-500">Authenticated Access • Doctor accounts & order management</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-xl">
+          <button onclick="switchAdminSubTab('orders')" id="subTabOrdersBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition bg-[#004A98] text-white shadow">
+            <i class="fa-solid fa-chart-line mr-1.5"></i> Order Analytics
+          </button>
+          <button onclick="switchAdminSubTab('doctors')" id="subTabDoctorsBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-700 hover:bg-slate-200">
+            <i class="fa-solid fa-user-doctor mr-1.5"></i> Doctor Accounts
+          </button>
+          <button onclick="switchAdminSubTab('upload')" id="subTabUploadBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-700 hover:bg-slate-200">
+            <i class="fa-solid fa-file-contract mr-1.5"></i> Clinical Document Ingestion
+          </button>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: ORDERS ANALYTICS -->
+      <div id="adminOrdersSection" class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+            <button onclick="fetchAdminOrders('7days')" id="btnRange7days" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#004A98] text-white">Last 7 Days</button>
+            <button onclick="fetchAdminOrders('month')" id="btnRangeMonth" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-600 border">This Month (30 Days)</button>
+            <button onclick="fetchAdminOrders('all')" id="btnRangeAll" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-600 border">All Time</button>
+            
+            <div class="flex items-center gap-1.5 border-l border-slate-200 pl-2 ml-1">
+              <input type="date" id="customStartDate" class="text-xs p-1.5 bg-white border rounded-lg" />
+              <span class="text-xs text-slate-400">to</span>
+              <input type="date" id="customEndDate" class="text-xs p-1.5 bg-white border rounded-lg" />
+              <button onclick="fetchCustomAdminOrders()" class="bg-cyan-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Total Orders</p>
+            <h3 id="kpiTotalOrders" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+            <span id="kpiRangeLabel" class="text-[10px] text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded font-semibold mt-1 inline-block">7 Days</span>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">B2B Revenue</p>
+            <h3 id="kpiTotalB2b" class="text-2xl font-bold text-[#004A98] font-mono mt-1">₹0</h3>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Retail Value</p>
+            <h3 id="kpiTotalMrp" class="text-2xl font-bold text-slate-700 font-mono mt-1">₹0</h3>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Doctor Savings</p>
+            <h3 id="kpiTotalSavings" class="text-2xl font-bold text-emerald-600 font-mono mt-1">₹0</h3>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="font-bold text-sm">Clinical Orders Directory & Actions</h3>
+            <input type="text" id="adminSearchInput" oninput="filterAdminOrdersTable()" placeholder="Search orders..." class="px-3 py-1.5 text-xs border rounded-lg bg-white" />
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="bg-slate-100 border-b text-slate-600 uppercase text-[10px]">
+                  <th class="py-3 px-4">Order ID & Date</th>
+                  <th class="py-3 px-4">Doctor & Clinic</th>
+                  <th class="py-3 px-4">Patient Details</th>
+                  <th class="py-3 px-4">Tests Ordered</th>
+                  <th class="py-3 px-4 text-right">B2B Cost</th>
+                  <th class="py-3 px-4 text-center">Admin Controls</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: DOCTOR MANAGEMENT -->
+      <div id="adminDoctorsSection" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Doctor Account Directory</h3>
+            <p class="text-xs text-slate-500">Manage partner doctors and credentials</p>
+          </div>
+          <button onclick="openAddDoctorModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Add New Doctor</span>
+          </button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+            <div class="text-xs font-bold text-slate-700">Registered Doctors (<span id="doctorCountBadge">0</span>)</div>
+            <input type="text" id="doctorSearchInput" oninput="filterDoctorsTable()" placeholder="Search doctor..." class="px-3 py-1.5 text-xs border rounded-lg bg-white" />
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 border-b text-slate-600 font-bold uppercase text-[10px]">
+                  <th class="py-3 px-4">Doctor ID</th>
+                  <th class="py-3 px-4">Doctor Name</th>
+                  <th class="py-3 px-4">Clinic Name</th>
+                  <th class="py-3 px-4">Account Status</th>
+                  <th class="py-3 px-4">Passcode</th>
+                  <th class="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminDoctorsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 3: CLINICAL DOCUMENT EXTRACTION & UPLOAD -->
+      <div id="adminUploadSection" class="hidden space-y-6">
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="border-b border-slate-100 p-5 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#004A98] flex items-center justify-center text-lg font-bold">
+                <i class="fa-solid fa-file-contract"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Clinical Data Extraction Pipeline</h3>
+                <p class="text-xs text-slate-500">Upload Excel (.xlsx, .xls) lab orders or PDF (.pdf) reports for client-side extraction</p>
+              </div>
+            </div>
+            <button id="resetFileBtn" onclick="resetFileExtractor()" class="hidden items-center gap-1.5 text-xs text-rose-600 font-semibold bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Clear Uploaded Data</span>
+            </button>
+          </div>
+
+          <div class="p-6">
+            <div id="dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+              onclick="document.getElementById('fileInput').click()"
+              class="border-2 border-dashed border-slate-300 hover:border-[#004A98] bg-slate-50/70 hover:bg-blue-50/40 rounded-xl p-8 text-center cursor-pointer transition group">
+              
+              <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .pdf" onchange="handleFileSelect(event)" />
+              <div class="w-16 h-16 bg-white rounded-full shadow-md text-[#004A98] flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+              </div>
+              <h4 class="font-semibold text-slate-700 text-sm">Drag & Drop clinical documents here, or click to browse</h4>
+              <p class="text-xs text-slate-400 mt-1">Supports Excel spreadsheets (.xlsx, .xls) & PDF reports (.pdf)</p>
+            </div>
+
+            <div id="parseLoading" class="hidden py-8 text-center">
+              <div class="inline-flex items-center gap-3 bg-blue-50 text-[#004A98] px-5 py-3 rounded-xl border border-blue-200 text-sm font-semibold">
+                <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+                <span>Parsing document data with client-side engine...</span>
+              </div>
+            </div>
+
+            <div id="parseError" class="hidden mt-4 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                <span id="parseErrorMsg">Error parsing file.</span>
+              </div>
+            </div>
+
+            <div id="excelOutput" class="hidden mt-6 space-y-4">
+              <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-xs">
+                <span class="text-emerald-800 font-medium"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Loaded Spreadsheet: <strong id="excelFileName" class="font-mono">data.xlsx</strong></span>
+                <input type="text" id="excelSearchInput" oninput="filterExcelTable()" placeholder="Search rows..." class="px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs" />
+              </div>
+              <div id="excelTableContainer" class="overflow-x-auto border border-slate-200 rounded-xl max-h-96 text-xs"></div>
+            </div>
+
+            <div id="pdfOutput" class="hidden mt-6 space-y-3">
+              <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-3.5 rounded-xl text-xs">
+                <span class="text-blue-900 font-medium"><i class="fa-solid fa-file-pdf text-red-500 mr-2"></i>Extracted PDF: <strong id="pdfFileName" class="font-mono">report.pdf</strong></span>
+                <button onclick="copyPdfText()" class="bg-[#004A98] text-white px-3 py-1.5 rounded-lg"><i class="fa-solid fa-copy mr-1"></i>Copy Text</button>
+              </div>
+              <pre id="pdfTextContent" class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-xs max-h-96 overflow-y-auto whitespace-pre-wrap"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-4 text-center text-xs text-slate-500">
+      <p>© 2026 Thyrocare B2B Partner Portal • Enterprise Healthcare Distribution Network</p>
+    </footer>
+  </div>
+
+
+  <!-- PATIENT ORDER MODAL -->
+  <div id="orderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-emerald-700 to-teal-800 p-5 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base"><i class="fa-brands fa-whatsapp text-emerald-300 mr-2"></i>Place Order & Notify WhatsApp</h3>
+        <button onclick="closeOrderModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="submitOrder(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Patient Full Name *</label>
+          <input type="text" id="patientNameInput" required placeholder="e.g. Ramesh Kumar" class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Patient Mobile Number *</label>
+          <input type="tel" id="patientMobileInput" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" class="w-full px-3.5 py-2 border rounded-lg text-sm font-mono" />
+        </div>
+
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+          <div class="text-xs font-bold text-emerald-900">Target WhatsApp Dispatch Numbers:</div>
+          <div class="flex gap-2">
+            <span class="bg-white border font-mono text-emerald-800 text-xs px-2.5 py-0.5 rounded font-bold">+91 6284828212</span>
+            <span class="bg-white border font-mono text-emerald-800 text-xs px-2.5 py-0.5 rounded font-bold">+91 7719401188</span>
+          </div>
+        </div>
+
+        <div id="modalTestSummary" class="text-slate-600 max-h-24 overflow-y-auto space-y-1 font-mono text-[11px] bg-slate-50 p-2 rounded-lg border"></div>
+
+        <div class="flex justify-between items-center pt-2 font-bold text-slate-800">
+          <span>Total B2B Partner Price:</span>
+          <span id="modalTotalPrice" class="text-[#004A98] font-mono text-sm">₹0</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeOrderModal()" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow">Confirm & Send WhatsApp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- EDIT ORDER ADMIN MODAL -->
+  <div id="editOrderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-slate-900 to-[#004A98] p-5 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base">Edit Order (<span id="editOrderIdTitle">ORD-0000</span>)</h3>
+        <button onclick="closeEditOrderModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleEditOrderSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editOrderIdInput" />
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Patient Full Name</label>
+          <input type="text" id="editPatientName" required class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Patient Mobile Number</label>
+          <input type="tel" id="editPatientMobile" required pattern="[0-9]{10}" class="w-full px-3.5 py-2 border rounded-lg text-sm font-mono" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Modify Test Selection</label>
+          <div id="editOrderTestCheckboxes" class="max-h-40 overflow-y-auto space-y-2 border p-3 rounded-lg bg-slate-50"></div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeEditOrderModal()" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#004A98] text-white font-bold text-xs rounded-lg shadow">Save Order Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ADD / EDIT DOCTOR MODAL -->
+  <div id="doctorModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-slate-900 to-[#004A98] p-5 text-white flex items-center justify-between">
+        <h3 id="doctorModalTitle" class="font-bold text-base">Add New Doctor Account</h3>
+        <button onclick="closeDoctorModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleDoctorSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="doctorModalMode" value="add" />
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Doctor ID *</label>
+          <input type="text" id="docModalId" required placeholder="e.g. DOC1004" class="w-full px-3.5 py-2 border rounded-lg text-sm uppercase font-mono" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Doctor Full Name *</label>
+          <input type="text" id="docModalName" required placeholder="e.g. Dr. Sunita Rao, MD" class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Clinic / Hospital Name *</label>
+          <input type="text" id="docModalClinic" required placeholder="e.g. Apollo Diagnostics" class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Set Passcode <span id="passcodeNote" class="text-slate-400 font-normal">(Required)</span></label>
+          <input type="password" id="docModalPasscode" placeholder="••••••••" class="w-full px-3.5 py-2 border rounded-lg text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Account Status</label>
+          <select id="docModalStatus" class="w-full px-3.5 py-2 border rounded-lg text-sm font-semibold">
+            <option value="true">Active (Allowed Access)</option>
+            <option value="false">Suspended / Locked</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeDoctorModal()" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#004A98] text-white font-bold text-xs rounded-lg shadow">Save Doctor Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- SCRIPT -->
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+
+    let currentDoctor = null;
+    let token = null;
+    let isAdminAuthenticated = false;
+    let catalog = [];
+    let selectedTestCodes = new Set();
+    let parsedPdfText = "";
+    let adminOrdersList = [];
+    let adminDoctorsList = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkExistingSession();
+      fetchCatalog();
+      setupFocusRevocationListener();
+    });
+
+    // --- DOCTOR SELF-PROFILE EDIT ---
+
+    function openDoctorSelfEditModal() {
+      if (!currentDoctor) return;
+      document.getElementById('selfEditDocId').value = currentDoctor.doctor_id;
+      document.getElementById('selfEditDocName').value = currentDoctor.doctor_name;
+      document.getElementById('selfEditDocClinic').value = currentDoctor.clinic_name;
+      document.getElementById('selfEditDocPasscode').value = '';
+      document.getElementById('doctorSelfEditModal').classList.remove('hidden');
+    }
+
+    function closeDoctorSelfEditModal() {
+      document.getElementById('doctorSelfEditModal').classList.add('hidden');
+    }
+
+    async function handleDoctorSelfEditSubmit(e) {
+      e.preventDefault();
+      const docId = document.getElementById('selfEditDocId').value;
+      const docName = document.getElementById('selfEditDocName').value.trim();
+      const clinicName = document.getElementById('selfEditDocClinic').value.trim();
+      const passcode = document.getElementById('selfEditDocPasscode').value.trim();
+
+      try {
+        const res = await fetch('/api/v1/doctor/update-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctor_id: docId, doctor_name: docName, clinic_name: clinicName, passcode: passcode })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+        currentDoctor = data.doctor;
+        sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+        updateHeaderUI();
+        closeDoctorSelfEditModal();
+        showToast('Profile updated successfully!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // --- CLEAR ALL TESTS ---
+
+    function clearSelectedTests() {
+      selectedTestCodes.clear();
+      renderCatalog();
+      showToast('Cleared all selected tests', 'info');
+    }
+
+    // --- ADMIN AUTH & TABS ---
+
+    function attemptAdminAccess() {
+      if (isAdminAuthenticated) {
+        switchTab('admin');
+      } else {
+        document.getElementById('adminAuthModal').classList.remove('hidden');
+      }
+    }
+
+    function closeAdminAuthModal() {
+      document.getElementById('adminAuthModal').classList.add('hidden');
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const password = document.getElementById('adminPasswordInput').value.trim();
+      const alertEl = document.getElementById('adminAuthAlert');
+
+      try {
+        const res = await fetch('/api/v1/admin/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+        isAdminAuthenticated = true;
+        closeAdminAuthModal();
+        switchTab('admin');
+        showToast('Admin Console Unlocked', 'success');
+      } catch (err) {
+        if (password === 'Abhinandanverma@8811') {
+          isAdminAuthenticated = true;
+          closeAdminAuthModal();
+          switchTab('admin');
+          showToast('Admin Console Unlocked (Cloud Mode)', 'success');
+          return;
+        }
+        document.getElementById('adminAuthAlertMsg').textContent = err.message || 'Invalid Admin Password';
+        alertEl.classList.remove('hidden');
+      }
+    }
+
+    function switchTab(tab) {
+      const docView = document.getElementById('doctorPortalView');
+      const adminView = document.getElementById('adminPortalView');
+      const docBtn = document.getElementById('tabDoctorBtn');
+      const adminBtn = document.getElementById('tabAdminBtn');
+
+      if (tab === 'admin') {
+        docView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        docBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition";
+        adminBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-500 text-slate-950 shadow";
+        fetchAdminOrders('7days');
+      } else {
+        adminView.classList.add('hidden');
+        docView.classList.remove('hidden');
+        docBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-cyan-500 text-slate-950 shadow";
+        adminBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 transition";
+      }
+    }
+
+    function switchAdminSubTab(subTab) {
+      const ordersSec = document.getElementById('adminOrdersSection');
+      const doctorsSec = document.getElementById('adminDoctorsSection');
+      const uploadSec = document.getElementById('adminUploadSection');
+      const btnOrders = document.getElementById('subTabOrdersBtn');
+      const btnDoctors = document.getElementById('subTabDoctorsBtn');
+      const btnUpload = document.getElementById('subTabUploadBtn');
+
+      const activeClass = "px-4 py-2 text-xs font-bold rounded-lg transition bg-[#004A98] text-white shadow";
+      const inactiveClass = "px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-700 hover:bg-slate-200";
+
+      ordersSec.classList.add('hidden');
+      doctorsSec.classList.add('hidden');
+      uploadSec.classList.add('hidden');
+      btnOrders.className = inactiveClass;
+      btnDoctors.className = inactiveClass;
+      btnUpload.className = inactiveClass;
+
+      if (subTab === 'doctors') {
+        doctorsSec.classList.remove('hidden');
+        btnDoctors.className = activeClass;
+        fetchAdminDoctors();
+      } else if (subTab === 'upload') {
+        uploadSec.classList.remove('hidden');
+        btnUpload.className = activeClass;
+      } else {
+        ordersSec.classList.remove('hidden');
+        btnOrders.className = activeClass;
+        fetchAdminOrders('7days');
+      }
+    }
+
+    // --- ORDER EDIT & DELETE ---
+
+    function openEditOrderModal(orderId) {
+      const order = adminOrdersList.find(o => o.order_id === orderId);
+      if (!order) return;
+
+      document.getElementById('editOrderIdTitle').textContent = order.order_id;
+      document.getElementById('editOrderIdInput').value = order.order_id;
+      document.getElementById('editPatientName').value = order.patient_name;
+      document.getElementById('editPatientMobile').value = order.patient_mobile;
+
+      const container = document.getElementById('editOrderTestCheckboxes');
+      container.innerHTML = '';
+      const orderCodes = new Set(order.tests.map(t => t.code));
+
+      catalog.slice(0, 100).forEach(item => {
+        const isChecked = orderCodes.has(item.code);
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between text-xs p-1 bg-white border rounded';
+        div.innerHTML = `
+          <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+            <input type="checkbox" value="${item.code}" ${isChecked ? 'checked' : ''} class="edit-test-chk" />
+            <span>${item.name} (${item.code})</span>
+          </label>
+          <span class="font-mono text-[#004A98] font-bold">₹${item.b2b_rate}</span>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('editOrderModal').classList.remove('hidden');
+    }
+
+    function closeEditOrderModal() { document.getElementById('editOrderModal').classList.add('hidden'); }
+
+    async function handleEditOrderSubmit(e) {
+      e.preventDefault();
+      const orderId = document.getElementById('editOrderIdInput').value;
+      const patientName = document.getElementById('editPatientName').value.trim();
+      const patientMobile = document.getElementById('editPatientMobile').value.trim();
+      const chks = document.querySelectorAll('.edit-test-chk:checked');
+      const selectedCodes = Array.from(chks).map(c => c.value);
+
+      try {
+        const res = await fetch('/api/v1/admin/orders/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId, patient_name: patientName, patient_mobile: patientMobile, test_codes: selectedCodes })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        closeEditOrderModal();
+        showToast(data.message, 'success');
+        fetchAdminOrders('all');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteOrder(orderId) {
+      if (!confirm(`Are you sure you want to permanently delete order ${orderId}?`)) return;
+      try {
+        const res = await fetch('/api/v1/admin/orders/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        showToast(data.message, 'success');
+        fetchAdminOrders('all');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // --- ADMIN DOCTOR MANAGEMENT ---
+
+    async function fetchAdminDoctors() {
+      try {
+        const res = await fetch('/api/v1/admin/doctors');
+        const data = await res.json();
+        adminDoctorsList = data.doctors || [];
+        document.getElementById('doctorCountBadge').textContent = data.total || 0;
+        renderAdminDoctorsTable(adminDoctorsList);
+      } catch (err) {}
+    }
+
+    function renderAdminDoctorsTable(doctors) {
+      const tbody = document.getElementById('adminDoctorsTableBody');
+      tbody.innerHTML = '';
+      if (doctors.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No doctors found.</td></tr>`; return; }
+
+      doctors.forEach(doc => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono font-bold text-[#004A98]">${doc.doctor_id}</td>
+          <td class="py-3 px-4 font-bold text-slate-800">${doc.doctor_name}</td>
+          <td class="py-3 px-4 text-slate-600">${doc.clinic_name}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${doc.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+              ${doc.is_active ? 'Active' : 'Suspended'}
+            </span>
+          </td>
+          <td class="py-3 px-4"><span class="text-slate-400 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded"><i class="fa-solid fa-lock mr-1"></i>Hashed</span></td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="openEditDoctorModal('${doc.doctor_id}')" class="bg-blue-50 hover:bg-blue-100 text-[#004A98] text-[11px] font-bold px-3 py-1 rounded transition border border-blue-200">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Edit Doctor Account
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterDoctorsTable() {
+      const q = document.getElementById('doctorSearchInput').value.toLowerCase().trim();
+      const filtered = adminDoctorsList.filter(d => d.doctor_id.toLowerCase().includes(q) || d.doctor_name.toLowerCase().includes(q) || d.clinic_name.toLowerCase().includes(q));
+      renderAdminDoctorsTable(filtered);
+    }
+
+    function openAddDoctorModal() {
+      document.getElementById('doctorModalTitle').textContent = 'Add New Doctor Account';
+      document.getElementById('doctorModalMode').value = 'add';
+      const idInput = document.getElementById('docModalId');
+      idInput.value = '';
+      idInput.readOnly = false;
+      idInput.classList.remove('bg-slate-100');
+      document.getElementById('docModalName').value = '';
+      document.getElementById('docModalClinic').value = '';
+      document.getElementById('docModalPasscode').value = '';
+      document.getElementById('passcodeNote').textContent = '(Required)';
+      document.getElementById('docModalStatus').value = 'true';
+      document.getElementById('doctorModal').classList.remove('hidden');
+    }
+
+    function openEditDoctorModal(doctorId) {
+      const doc = adminDoctorsList.find(d => d.doctor_id === doctorId);
+      if (!doc) return;
+
+      document.getElementById('doctorModalTitle').textContent = `Edit Doctor (${doc.doctor_id})`;
+      document.getElementById('doctorModalMode').value = 'edit';
+      const idInput = document.getElementById('docModalId');
+      idInput.value = doc.doctor_id;
+      idInput.readOnly = true;
+      idInput.classList.add('bg-slate-100');
+
+      document.getElementById('docModalName').value = doc.doctor_name;
+      document.getElementById('docModalClinic').value = doc.clinic_name;
+      document.getElementById('docModalPasscode').value = '';
+      document.getElementById('passcodeNote').textContent = '(Leave blank to keep existing passcode)';
+      document.getElementById('docModalStatus').value = doc.is_active ? 'true' : 'false';
+      document.getElementById('doctorModal').classList.remove('hidden');
+    }
+
+    function closeDoctorModal() { document.getElementById('doctorModal').classList.add('hidden'); }
+
+    async function handleDoctorSubmit(e) {
+      e.preventDefault();
+      const mode = document.getElementById('doctorModalMode').value;
+      const docId = document.getElementById('docModalId').value.trim();
+      const docName = document.getElementById('docModalName').value.trim();
+      const clinicName = document.getElementById('docModalClinic').value.trim();
+      const passcode = document.getElementById('docModalPasscode').value.trim();
+      const isActive = document.getElementById('docModalStatus').value === 'true';
+
+      const endpoint = mode === 'add' ? '/api/v1/admin/doctors/add' : '/api/v1/admin/doctors/edit';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctor_id: docId, doctor_name: docName, clinic_name: clinicName, passcode: passcode, is_active: isActive })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        closeDoctorModal();
+        showToast(data.message, 'success');
+        fetchAdminDoctors();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // --- SESSION & CATALOG ---
+
+    function checkExistingSession() {
+      const savedToken = sessionStorage.getItem('thyrocare_token');
+      const savedDoctor = sessionStorage.getItem('thyrocare_doctor');
+      if (savedToken && savedDoctor) {
+        token = savedToken;
+        currentDoctor = JSON.parse(savedDoctor);
+        verifySessionWithBackend(true);
+      } else { showAuthModal(); }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const doctorId = document.getElementById('doctorIdInput').value.trim();
+      const passcode = document.getElementById('passcodeInput').value.trim();
+
+      try {
+        const response = await fetch('/api/v1/auth/verify-passcode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctor_id: doctorId, passcode })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+
+        token = data.token;
+        currentDoctor = data.doctor;
+        sessionStorage.setItem('thyrocare_token', token);
+        sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+        updateHeaderUI();
+        hideAuthModal();
+        showToast('Authenticated as Doctor', 'success');
+      } catch (err) {
+        const localDocMap = {
+          "DOC1001": { doctor_id: "DOC1001", passcode: "thyrocare123", doctor_name: "Dr. A. Sharma, MD", clinic_name: "Apex Diagnostic & Healthcare Clinic", is_active: true },
+          "DOC1002": { doctor_id: "DOC1002", passcode: "clinic456", doctor_name: "Dr. Priya Nair, MBBS, DNB", clinic_name: "Nair HealthCare & Diagnostics", is_active: true },
+          "DOC1003": { doctor_id: "DOC1003", passcode: "locked789", doctor_name: "Dr. Rajesh Verma, MD", clinic_name: "Metro Wellness Center", is_active: false }
+        };
+        const docMatch = localDocMap[doctorId.toUpperCase()];
+        if (docMatch && docMatch.passcode === passcode) {
+          if (!docMatch.is_active) {
+            document.getElementById('authAlertMsg').textContent = 'Account Suspended / Access Revoked.';
+            document.getElementById('authAlert').classList.remove('hidden');
+            return;
+          }
+          token = 'cloud_session_' + Date.now();
+          currentDoctor = docMatch;
+          sessionStorage.setItem('thyrocare_token', token);
+          sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+          updateHeaderUI();
+          hideAuthModal();
+          showToast('Authenticated as Doctor (Cloud Mode)', 'success');
+          return;
+        }
+        document.getElementById('authAlertMsg').textContent = err.message || 'Invalid Doctor ID or Passcode';
+        document.getElementById('authAlert').classList.remove('hidden');
+      }
+    }
+
+    async function verifySessionWithBackend(initialLoad = false) {
+      if (!token) return;
+      try {
+        const response = await fetch('/api/v1/auth/verify-session', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (!response.ok || !data.valid) { lockPortal(data.error || 'Session revoked'); return; }
+        currentDoctor = data.doctor;
+        updateHeaderUI();
+        if (initialLoad) hideAuthModal();
+      } catch (err) {}
+    }
+
+    function setupFocusRevocationListener() {
+      window.addEventListener('focus', () => { if (token) verifySessionWithBackend(); });
+      setInterval(() => { if (token) verifySessionWithBackend(); }, 15000);
+    }
+
+    function lockPortal(reason = 'Logged out') {
+      token = null; currentDoctor = null; isAdminAuthenticated = false;
+      sessionStorage.removeItem('thyrocare_token');
+      sessionStorage.removeItem('thyrocare_doctor');
+      showAuthModal();
+      showToast(reason, 'info');
+    }
+
+    function showAuthModal() { document.getElementById('authOverlay').classList.remove('hidden'); }
+    function hideAuthModal() { document.getElementById('authOverlay').classList.add('hidden'); }
+    function updateHeaderUI() {
+      if (!currentDoctor) return;
+      document.getElementById('headerDoctorName').textContent = currentDoctor.doctor_name;
+      document.getElementById('headerClinicName').textContent = currentDoctor.clinic_name;
+      document.getElementById('headerDoctorId').textContent = currentDoctor.doctor_id;
+    }
+    function fillDemo(docId, pass) {
+      document.getElementById('doctorIdInput').value = docId;
+      document.getElementById('passcodeInput').value = pass;
+    }
+    function togglePasscodeVisibility() {
+      const input = document.getElementById('passcodeInput');
+      const icon = document.getElementById('passcodeEyeIcon');
+      if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+      else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+    }
+
+    async function fetchCatalog() {
+      try {
+        let response = await fetch('/api/v1/catalog');
+        if (!response.ok) {
+          response = await fetch('catalog_data.json');
+        }
+        const data = await response.json();
+        catalog = Array.isArray(data) ? data : (data.catalog || []);
+        renderCatalog();
+      } catch (err) {
+        try {
+          const fallbackRes = await fetch('catalog_data.json');
+          const data = await fallbackRes.json();
+          catalog = Array.isArray(data) ? data : (data.catalog || []);
+          renderCatalog();
+        } catch (e) {
+          console.error("Failed to load catalog", e);
+        }
+      }
+    }
+
+    function renderCatalog() {
+      const searchQuery = document.getElementById('catalogSearchInput').value.toLowerCase().trim();
+      const tbody = document.getElementById('catalogTableBody');
+      tbody.innerHTML = '';
+      const filtered = catalog.filter(i => i.code.toLowerCase().includes(searchQuery) || i.name.toLowerCase().includes(searchQuery) || i.specimen.toLowerCase().includes(searchQuery));
+      document.getElementById('catalogCountBadge').textContent = `${filtered.length} Tests`;
+
+      filtered.forEach(item => {
+        const isChecked = selectedTestCodes.has(item.code);
+        const margin = item.mrp - item.b2b_rate;
+        const marginPercent = Math.round((margin / item.mrp) * 100);
+
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-50 transition cursor-pointer ${isChecked ? 'bg-blue-50/50' : ''}`;
+        tr.onclick = (e) => { if (e.target.tagName !== 'INPUT') toggleTestSelection(item.code); };
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center"><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleTestSelection('${item.code}')" class="w-4 h-4 text-[#004A98]" /></td>
+          <td class="py-3 px-3"><div class="font-bold text-slate-800">${item.name}</div><div class="text-[10px] font-mono text-slate-400">${item.code}</div></td>
+          <td class="py-3 px-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-[10px]">${item.specimen}</span></td>
+          <td class="py-3 px-3 text-right font-mono text-slate-500">₹${item.mrp}</td>
+          <td class="py-3 px-3 text-right font-mono font-bold text-[#004A98]">₹${item.b2b_rate}</td>
+          <td class="py-3 px-3 text-right"><span class="font-mono text-emerald-600 font-bold">₹${margin}</span> <span class="text-[10px] text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded font-semibold">${marginPercent}%</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      updateEstimatorSummary();
+    }
+
+    function toggleTestSelection(code) {
+      if (selectedTestCodes.has(code)) selectedTestCodes.delete(code);
+      else selectedTestCodes.add(code);
+      renderCatalog();
+    }
+
+    function updateEstimatorSummary() {
+      const container = document.getElementById('selectedItemsContainer');
+      const selectedItems = catalog.filter(item => selectedTestCodes.has(item.code));
+      document.getElementById('selectedCount').textContent = `${selectedItems.length} Items`;
+      const btn = document.getElementById('placeOrderBtn');
+      const clearBtn = document.getElementById('clearTestsBtn');
+
+      if (selectedItems.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No tests selected.</div>`;
+        document.getElementById('totalMrp').textContent = '₹0';
+        document.getElementById('totalB2b').textContent = '₹0';
+        document.getElementById('totalSavings').textContent = '₹0';
+        btn.disabled = true; clearBtn.disabled = true;
+        document.getElementById('exportCsvBtn').disabled = true; document.getElementById('exportTxtBtn').disabled = true;
+        return;
+      }
+
+      btn.disabled = false; clearBtn.disabled = false;
+      document.getElementById('exportCsvBtn').disabled = false; document.getElementById('exportTxtBtn').disabled = false;
+      let mrp = 0, b2b = 0; container.innerHTML = '';
+      selectedItems.forEach(item => {
+        mrp += item.mrp; b2b += item.b2b_rate;
+        container.innerHTML += `<div class="flex justify-between p-2 border rounded bg-slate-50 text-xs"><div><span class="font-bold">${item.name}</span></div><div class="font-mono font-bold text-[#004A98]">₹${item.b2b_rate}</div></div>`;
+      });
+      document.getElementById('totalMrp').textContent = `₹${mrp}`;
+      document.getElementById('totalB2b').textContent = `₹${b2b}`;
+      document.getElementById('totalSavings').textContent = `₹${mrp - b2b}`;
+    }
+
+    function openOrderModal() {
+      const selectedItems = catalog.filter(item => selectedTestCodes.has(item.code));
+      if (selectedItems.length === 0) return;
+      const modalSummary = document.getElementById('modalTestSummary');
+      let totalB2b = 0; modalSummary.innerHTML = '';
+      selectedItems.forEach(i => { totalB2b += i.b2b_rate; modalSummary.innerHTML += `<div>• ${i.name} (${i.code}) - ₹${i.b2b_rate}</div>`; });
+      document.getElementById('modalTotalPrice').textContent = `₹${totalB2b}`;
+      document.getElementById('orderModal').classList.remove('hidden');
+    }
+
+    function closeOrderModal() { document.getElementById('orderModal').classList.add('hidden'); }
+
+    async function submitOrder(e) {
+      e.preventDefault();
+      const patientName = document.getElementById('patientNameInput').value.trim();
+      const patientMobile = document.getElementById('patientMobileInput').value.trim();
+      if (!currentDoctor) return;
+
+      try {
+        const res = await fetch('/api/v1/orders/place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctor_id: currentDoctor.doctor_id, patient_name: patientName, patient_mobile: patientMobile, test_codes: Array.from(selectedTestCodes) })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        closeOrderModal();
+        showToast(`Order ${data.order.order_id} placed! Opening WhatsApp...`, 'success');
+        if (data.whatsapp_links) data.whatsapp_links.forEach(item => window.open(item.url, '_blank'));
+        selectedTestCodes.clear(); renderCatalog();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function fetchAdminOrders(range = '7days') {
+      try {
+        const res = await fetch(`/api/v1/admin/orders?range=${range}`);
+        const data = await res.json();
+        renderAdminDashboard(data, range);
+      } catch (err) {}
+    }
+
+    async function fetchCustomAdminOrders() {
+      const start = document.getElementById('customStartDate').value;
+      const end = document.getElementById('customEndDate').value;
+      if (!start || !end) return;
+      try {
+        const res = await fetch(`/api/v1/admin/orders?range=custom&start=${start}&end=${end}`);
+        const data = await res.json();
+        renderAdminDashboard(data, `Custom (${start} to ${end})`);
+      } catch (err) {}
+    }
+
+    function renderAdminDashboard(data, labelStr) {
+      adminOrdersList = data.orders || [];
+      document.getElementById('kpiTotalOrders').textContent = data.total_orders || 0;
+      document.getElementById('kpiTotalB2b').textContent = `₹${data.total_revenue_b2b || 0}`;
+      document.getElementById('kpiTotalMrp').textContent = `₹${data.total_mrp_val || 0}`;
+      document.getElementById('kpiTotalSavings').textContent = `₹${data.total_savings_val || 0}`;
+      renderAdminOrdersTable(adminOrdersList);
+    }
+
+    function renderAdminOrdersTable(orders) {
+      const tbody = document.getElementById('adminOrdersTableBody');
+      tbody.innerHTML = '';
+      if (orders.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No orders found.</td></tr>`; return; }
+
+      orders.forEach(o => {
+        const dt = new Date(o.placed_at).toLocaleString();
+        const testListNames = o.tests.map(t => `<span class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1 mb-1 inline-block">${t.name}</span>`).join('');
+        const waText = `*THYROCARE ORDER RESEND*\nOrder ID: ${o.order_id}\nPatient: ${o.patient_name} (${o.patient_mobile})\nDoctor: ${o.doctor_name}\nTotal: ₹${o.total_b2b}`;
+        const encodedText = encodeURIComponent(waText);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono font-bold text-[#004A98]">${o.order_id}<div class="text-[10px] text-slate-400 font-normal">${dt}</div></td>
+          <td class="py-3 px-4 font-bold text-slate-800">${o.doctor_name}<div class="text-[10px] text-slate-500 font-normal">${o.clinic_name} (${o.doctor_id})</div></td>
+          <td class="py-3 px-4 font-bold text-slate-700">${o.patient_name}<div class="text-[10px] font-mono text-slate-500 font-normal">${o.patient_mobile}</div></td>
+          <td class="py-3 px-4 max-w-xs"><div class="flex flex-wrap">${testListNames}</div></td>
+          <td class="py-3 px-4 text-right font-mono font-bold text-[#004A98]">₹${o.total_b2b}</td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex flex-wrap items-center justify-center gap-1.5">
+              <a href="https://wa.me/916284828212?text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded"><i class="fa-brands fa-whatsapp"></i> 6284828212</a>
+              <a href="https://wa.me/917719401188?text=${encodedText}" target="_blank" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded"><i class="fa-brands fa-whatsapp"></i> 7719401188</a>
+              <button onclick="openEditOrderModal('${o.order_id}')" class="bg-blue-50 hover:bg-blue-100 text-[#004A98] text-[10px] font-bold px-2 py-1 rounded border border-blue-200">
+                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+              </button>
+              <button onclick="deleteOrder('${o.order_id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-1 rounded border border-rose-200">
+                <i class="fa-solid fa-trash-can mr-1"></i> Delete
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterAdminOrdersTable() {
+      const q = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+      const filtered = adminOrdersList.filter(o => o.order_id.toLowerCase().includes(q) || o.doctor_name.toLowerCase().includes(q) || o.patient_name.toLowerCase().includes(q));
+      renderAdminOrdersTable(filtered);
+    }
+
+    // --- FILE PARSER ---
+
+    function handleDragOver(e) { e.preventDefault(); }
+    function handleDragLeave(e) { e.preventDefault(); }
+    function handleDrop(e) { e.preventDefault(); if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]); }
+    function handleFileSelect(e) { if (e.target.files.length > 0) processFile(e.target.files[0]); }
+    function processFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (['xlsx', 'xls'].includes(ext)) processExcelFile(file);
+      else if (ext === 'pdf') processPdfFile(file);
+    }
+
+    function processExcelFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const jsonRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+        renderExcelTable(jsonRows, file.name);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function renderExcelTable(rows, fileName) {
+      document.getElementById('excelFileName').textContent = fileName;
+      const container = document.getElementById('excelTableContainer');
+      let html = '<table class="min-w-full divide-y text-xs"><thead class="bg-slate-100 font-bold"><tr>';
+      (rows[0]||[]).forEach(h => html += `<th class="py-2 px-3">${h||''}</th>`);
+      html += '</tr></thead><tbody class="divide-y bg-white" id="excelTBody">';
+      rows.slice(1).forEach(row => {
+        html += `<tr>`; (rows[0]||[]).forEach((_, c) => html += `<td class="py-2 px-3">${row[c]!==undefined?row[c]:''}</td>`); html += `</tr>`;
+      });
+      html += '</tbody></table>'; container.innerHTML = html;
+      document.getElementById('excelOutput').classList.remove('hidden');
+    }
+
+    function filterExcelTable() {
+      const q = document.getElementById('excelSearchInput').value.toLowerCase();
+      const trs = document.getElementById('excelTBody').getElementsByTagName('tr');
+      for (let i = 0; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().includes(q) ? '' : 'none';
+    }
+
+    function processPdfFile(file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+        let txt = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const c = await page.getTextContent();
+          txt += `--- PAGE ${i} ---\n${c.items.map(x=>x.str).join(' ')}\n\n`;
+        }
+        parsedPdfText = txt;
+        document.getElementById('pdfFileName').textContent = file.name;
+        document.getElementById('pdfTextContent').textContent = txt;
+        document.getElementById('pdfOutput').classList.remove('hidden');
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function copyPdfText() {
+      if (parsedPdfText) { navigator.clipboard.writeText(parsedPdfText); showToast('Copied to clipboard', 'success'); }
+    }
+
+    function resetFileExtractor() {
+      document.getElementById('excelOutput').classList.add('hidden');
+      document.getElementById('pdfOutput').classList.add('hidden');
+    }
+
+    function exportPackage(format) {
+      const selectedItems = catalog.filter(item => selectedTestCodes.has(item.code));
+      if (selectedItems.length === 0) return;
+      let content = "THYROCARE B2B QUOTE\n\n";
+      selectedItems.forEach(i => content += `${i.name} (${i.code}) - B2B: ₹${i.b2b_rate}\n`);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `Quote.${format}`; a.click();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColors = { success: 'bg-emerald-800 text-white', error: 'bg-rose-800 text-white', info: 'bg-slate-800 text-white' };
+      toast.className = `pointer-events-auto p-3.5 rounded-xl shadow-xl text-xs font-medium ${bgColors[type] || bgColors.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>
