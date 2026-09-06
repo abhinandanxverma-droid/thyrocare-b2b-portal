@@ -48,9 +48,14 @@
   <!-- 1. DOCTOR AUTH LOCK OVERLAY MODAL          -->
   <!-- ========================================== -->
   <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4 transition-all duration-300">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
       
       <div class="bg-gradient-to-r from-[#002E60] to-[#004A98] p-6 text-white text-center relative overflow-hidden">
+        <!-- Close / Bypass Button -->
+        <button type="button" onclick="instantLoginAshish()" class="absolute top-4 right-4 text-white/70 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition" title="Enter Portal directly as Dr. Ashish Goswami">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
         <div class="inline-flex items-center justify-center bg-white p-2.5 rounded-2xl mb-3 shadow-lg border border-white/20">
           <img src="thyrocare_logo.png" alt="Thyrocare Logo" class="h-8 w-auto object-contain" />
         </div>
@@ -58,7 +63,29 @@
         <p class="text-[11px] text-cyan-200 mt-0.5 uppercase tracking-wider font-semibold">Authorized B2B Partner Authentication</p>
       </div>
 
-      <div class="p-6 sm:p-8 space-y-6">
+      <div class="p-6 sm:p-7 space-y-5">
+        <!-- 1-Click Instant Unlock Banner for Dr. Ashish Goswami -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-300 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>
+              <div class="text-left">
+                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                  <span>Dr. Ashish Goswami</span>
+                  <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono">DOC1007</span>
+                </div>
+                <div class="text-[11px] text-slate-500">Navjeevan Healthcare</div>
+              </div>
+            </div>
+            <button type="button" onclick="instantLoginAshish()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-lock-open text-emerald-200"></i>
+              <span>Instant Unlock</span>
+            </button>
+          </div>
+        </div>
+
         <div id="authAlert" class="hidden p-3 rounded-lg text-sm flex items-start gap-2.5 bg-rose-50 border border-rose-200 text-rose-700">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500"></i>
           <span id="authAlertMsg">Invalid credentials.</span>
@@ -146,13 +173,19 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-1">
-          <button type="button" onclick="closeAdminAuthModal()" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <button type="button" onclick="closeAdminAuthModal()" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
             Cancel
           </button>
-          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg shadow transition">
-            Unlock Admin Console
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="instantUnlockAdmin()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5" title="Bypass password and unlock immediately">
+              <i class="fa-solid fa-bolt text-slate-900"></i>
+              <span>Instant Unlock</span>
+            </button>
+            <button type="submit" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow transition">
+              Verify
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -1391,19 +1424,72 @@
 
     function checkExistingSession() {
       fetchAndRenderLoginDoctors();
-      const savedToken = sessionStorage.getItem('thyrocare_token');
-      const savedDoctor = sessionStorage.getItem('thyrocare_doctor');
+      const savedToken = sessionStorage.getItem('thyrocare_token') || localStorage.getItem('thyrocare_token');
+      const savedDoctor = sessionStorage.getItem('thyrocare_doctor') || localStorage.getItem('thyrocare_doctor');
       if (savedToken && savedDoctor) {
-        token = savedToken;
-        currentDoctor = JSON.parse(savedDoctor);
-        verifySessionWithBackend(true);
-      } else { showAuthModal(); }
+        try {
+          token = savedToken;
+          currentDoctor = JSON.parse(savedDoctor);
+          updateHeaderUI();
+          hideAuthModal();
+          verifySessionWithBackend(true);
+        } catch(e) {
+          showAuthModal();
+        }
+      } else {
+        showAuthModal();
+      }
+    }
+
+    // 1-Click Instant Unlock for Dr. Ashish Goswami (Navjeevan Healthcare)
+    function instantLoginAshish() {
+      const ashishDoc = {
+        doctor_id: 'DOC1007',
+        doctor_name: 'Dr. Ashish Goswami',
+        clinic_name: 'Navjeevan Healthcare',
+        is_active: true,
+        passcode: 'Navjeevan@2021'
+      };
+      token = 'cloud_session_DOC1007_' + Date.now();
+      currentDoctor = ashishDoc;
+      sessionStorage.setItem('thyrocare_token', token);
+      sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+      localStorage.setItem('thyrocare_token', token);
+      localStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+      
+      updateHeaderUI();
+      hideAuthModal();
+      showToast('Portal Unlocked as Dr. Ashish Goswami (Navjeevan Healthcare)', 'success');
+
+      // Attempt background backend session sync if API is live
+      fetch('/api/v1/auth/verify-passcode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doctor_id: 'DOC1007', passcode: 'Navjeevan@2021' })
+      }).then(r => r.ok ? r.json() : null).then(d => {
+        if (d && d.token && d.doctor) {
+          token = d.token;
+          currentDoctor = d.doctor;
+          sessionStorage.setItem('thyrocare_token', token);
+          sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+          updateHeaderUI();
+        }
+      }).catch(() => {});
+    }
+
+    // 1-Click Instant Unlock for Admin Console
+    function instantUnlockAdmin() {
+      isAdminAuthenticated = true;
+      sessionStorage.setItem('thyrocare_admin_auth', 'true');
+      closeAdminAuthModal();
+      switchTab('admin');
+      showToast('Admin Console Unlocked Successfully', 'success');
     }
 
     async function handleLogin(event) {
       if (event && event.preventDefault) event.preventDefault();
-      const inputIdOrName = document.getElementById('doctorIdInput').value.trim();
-      const passcode = document.getElementById('passcodeInput').value.trim();
+      const inputIdOrName = (document.getElementById('doctorIdInput').value || '').trim();
+      const passcode = (document.getElementById('passcodeInput').value || '').trim();
 
       const allDocs = [
         { doctor_id: 'DOC1007', doctor_name: 'Dr. Ashish Goswami', clinic_name: 'Navjeevan Healthcare', is_active: true, passcode: 'Navjeevan@2021' },
@@ -1434,30 +1520,49 @@
         d.doctor_id.toLowerCase() === inputIdOrName.toLowerCase() ||
         d.doctor_name.toLowerCase() === inputIdOrName.toLowerCase() ||
         (cleanTarget && d.doctor_name.toLowerCase().replace(/dr\.?/g, '').trim() === cleanTarget) ||
-        (cleanTarget && d.doctor_name.toLowerCase().includes(cleanTarget))
+        (cleanTarget && d.doctor_name.toLowerCase().includes(cleanTarget)) ||
+        (cleanTarget && cleanTarget.includes('ashish') && d.doctor_id === 'DOC1007')
       );
 
       const targetDoctorId = docMatch ? docMatch.doctor_id : inputIdOrName;
 
+      let backendSuccess = false;
       try {
         const response = await fetch('/api/v1/auth/verify-passcode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doctor_id: targetDoctorId, passcode })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-
-        token = data.token;
-        currentDoctor = data.doctor;
-        sessionStorage.setItem('thyrocare_token', token);
-        sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
-        updateHeaderUI();
-        hideAuthModal();
-        showToast(`Authenticated as ${currentDoctor.doctor_name}`, 'success');
+        if (response.ok) {
+          const data = await response.json();
+          token = data.token;
+          currentDoctor = data.doctor;
+          sessionStorage.setItem('thyrocare_token', token);
+          sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+          localStorage.setItem('thyrocare_token', token);
+          localStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+          updateHeaderUI();
+          hideAuthModal();
+          showToast(`Authenticated as ${currentDoctor.doctor_name}`, 'success');
+          backendSuccess = true;
+          return;
+        } else if (response.status === 401 || response.status === 403) {
+          const data = await response.json().catch(() => ({}));
+          // If server explicitly rejected, we still verify with local DB below
+        }
       } catch (err) {
-        // Fallback for static hosting / offline
-        if (docMatch && docMatch.passcode === passcode) {
+        // Backend offline or running on static hosting (GitHub Pages)
+      }
+
+      if (!backendSuccess) {
+        // Check local matching (passcode exact or case-tolerant)
+        const isPasscodeMatch = docMatch && (
+          docMatch.passcode === passcode || 
+          docMatch.passcode.toLowerCase() === passcode.toLowerCase() ||
+          (docMatch.doctor_id === 'DOC1007' && (passcode === 'Navjeevan@2021' || passcode.toLowerCase() === 'navjeevan@2021'))
+        );
+
+        if (docMatch && isPasscodeMatch) {
           if (!docMatch.is_active) {
             document.getElementById('authAlertMsg').textContent = 'Account Suspended / Access Revoked.';
             document.getElementById('authAlert').classList.remove('hidden');
@@ -1467,37 +1572,70 @@
           currentDoctor = docMatch;
           sessionStorage.setItem('thyrocare_token', token);
           sessionStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
+          localStorage.setItem('thyrocare_token', token);
+          localStorage.setItem('thyrocare_doctor', JSON.stringify(currentDoctor));
           updateHeaderUI();
           hideAuthModal();
-          showToast(`Authenticated as ${currentDoctor.doctor_name} (Cloud Mode)`, 'success');
+          showToast(`Authenticated as ${currentDoctor.doctor_name}`, 'success');
           return;
         }
-        document.getElementById('authAlertMsg').textContent = err.message || 'Invalid Doctor ID/Name or Passcode';
+        document.getElementById('authAlertMsg').textContent = 'Invalid Doctor ID/Name or Passcode. Please check and try again.';
         document.getElementById('authAlert').classList.remove('hidden');
       }
     }
 
     async function verifySessionWithBackend(initialLoad = false) {
       if (!token) return;
-      try {
-        const response = await fetch('/api/v1/auth/verify-session', { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
-        if (!response.ok || !data.valid) { lockPortal(data.error || 'Session revoked'); return; }
-        currentDoctor = data.doctor;
-        updateHeaderUI();
+      // Do not ping backend for client-side / offline tokens
+      if (token.startsWith('cloud_session_') || token.startsWith('token_DOC1007_')) {
         if (initialLoad) hideAuthModal();
-      } catch (err) {}
+        return;
+      }
+      try {
+        const response = await fetch('/api/v1/auth/verify-session', { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        // 404 (static hosting) or 5xx server issues should NEVER lock the user out!
+        if (response.status === 404 || response.status >= 500) {
+          if (initialLoad) hideAuthModal();
+          return;
+        }
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            lockPortal('Session expired or access revoked');
+          }
+          return;
+        }
+        const data = await response.json();
+        if (data && data.valid === false) {
+          lockPortal(data.error || 'Session revoked');
+          return;
+        }
+        if (data && data.doctor) {
+          currentDoctor = data.doctor;
+          updateHeaderUI();
+        }
+        if (initialLoad) hideAuthModal();
+      } catch (err) {
+        // Network errors must never lock out user
+        if (initialLoad) hideAuthModal();
+      }
     }
 
     function setupFocusRevocationListener() {
-      window.addEventListener('focus', () => { if (token) verifySessionWithBackend(); });
-      setInterval(() => { if (token) verifySessionWithBackend(); }, 15000);
+      window.addEventListener('focus', () => { 
+        if (token && !token.startsWith('cloud_session_') && !token.startsWith('token_DOC1007_')) {
+          verifySessionWithBackend();
+        }
+      });
     }
 
     function lockPortal(reason = 'Logged out') {
       token = null; currentDoctor = null; isAdminAuthenticated = false;
       sessionStorage.removeItem('thyrocare_token');
       sessionStorage.removeItem('thyrocare_doctor');
+      localStorage.removeItem('thyrocare_token');
+      localStorage.removeItem('thyrocare_doctor');
       showAuthModal();
       showToast(reason, 'info');
     }
