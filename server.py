@@ -45,6 +45,42 @@ doctors_db = {
         "clinic_name": "Metro Wellness Center",
         "is_active": False,
         "created_at": "2025-02-10T14:15:00Z"
+    },
+    "DOC1004": {
+        "doctor_id": "DOC1004",
+        "passcode_hash": hash_passcode("care2026"),
+        "raw_passcode": "care2026",
+        "doctor_name": "Dr. Sunita Rao, MD (Pathology)",
+        "clinic_name": "CityCare Diagnostics & Research Centre",
+        "is_active": True,
+        "created_at": "2025-03-01T09:00:00Z"
+    },
+    "DOC1005": {
+        "doctor_id": "DOC1005",
+        "passcode_hash": hash_passcode("thyrocare2026"),
+        "raw_passcode": "thyrocare2026",
+        "doctor_name": "Dr. Vikramaditya Sen, MBBS, MD",
+        "clinic_name": "Sen Endocrine & Diabetes Specialty Clinic",
+        "is_active": True,
+        "created_at": "2025-03-15T11:30:00Z"
+    },
+    "DOC1006": {
+        "doctor_id": "DOC1006",
+        "passcode_hash": hash_passcode("lifeline789"),
+        "raw_passcode": "lifeline789",
+        "doctor_name": "Dr. Ananya Roy, MBBS, DCP",
+        "clinic_name": "LifeLine Pathology & Wellness Lab",
+        "is_active": True,
+        "created_at": "2025-04-01T08:45:00Z"
+    },
+    "DOC1007": {
+        "doctor_id": "DOC1007",
+        "passcode_hash": hash_passcode("Navjeevan@2021"),
+        "raw_passcode": "Navjeevan@2021",
+        "doctor_name": "Dr. Ashish Goswami",
+        "clinic_name": "Navjeevan Healthcare",
+        "is_active": True,
+        "created_at": "2025-05-01T10:00:00Z"
     }
 }
 

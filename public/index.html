@@ -105,7 +105,7 @@
               <i class="fa-solid fa-arrows-rotate"></i> Refresh
             </button>
           </div>
-          <div id="loginDoctorCardsContainer" class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1"></div>
+          <div id="loginDoctorCardsContainer" class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1"></div>
         </div>
       </div>
     </div>
@@ -1296,12 +1296,23 @@
     async function fetchAndRenderLoginDoctors() {
       const container = document.getElementById('loginDoctorCardsContainer');
       if (!container) return;
+      
+      const DEFAULT_SYSTEM_DOCTORS = [
+        { doctor_id: 'DOC1001', doctor_name: 'Dr. A. Sharma, MD', clinic_name: 'Apex Diagnostic & Healthcare Clinic', is_active: true, passcode: 'thyrocare123' },
+        { doctor_id: 'DOC1002', doctor_name: 'Dr. Priya Nair, MBBS, DNB', clinic_name: 'Nair HealthCare & Diagnostics', is_active: true, passcode: 'clinic456' },
+        { doctor_id: 'DOC1003', doctor_name: 'Dr. Rajesh Verma, MD', clinic_name: 'Metro Wellness Center', is_active: false, passcode: 'locked789' },
+        { doctor_id: 'DOC1004', doctor_name: 'Dr. Sunita Rao, MD (Pathology)', clinic_name: 'CityCare Diagnostics & Research Centre', is_active: true, passcode: 'care2026' },
+        { doctor_id: 'DOC1005', doctor_name: 'Dr. Vikramaditya Sen, MBBS, MD', clinic_name: 'Sen Endocrine & Diabetes Specialty Clinic', is_active: true, passcode: 'thyrocare2026' },
+        { doctor_id: 'DOC1006', doctor_name: 'Dr. Ananya Roy, MBBS, DCP', clinic_name: 'LifeLine Pathology & Wellness Lab', is_active: true, passcode: 'lifeline789' },
+        { doctor_id: 'DOC1007', doctor_name: 'Dr. Ashish Goswami', clinic_name: 'Navjeevan Healthcare', is_active: true, passcode: 'Navjeevan@2021' }
+      ];
+
       let doctors = [];
       try {
         const res = await fetch('/api/v1/doctors/public-list');
         if (res.ok) {
           const data = await res.json();
-          doctors = data.doctors || [];
+          doctors = data.doctors && data.doctors.length > 0 ? data.doctors : DEFAULT_SYSTEM_DOCTORS;
           localStorage.setItem('thyrocare_public_doctors', JSON.stringify(doctors));
         } else {
           throw new Error('Local fallback');
@@ -1309,13 +1320,16 @@
       } catch (e) {
         const saved = localStorage.getItem('thyrocare_public_doctors');
         if (saved) {
-          doctors = JSON.parse(saved);
+          try {
+            const parsed = JSON.parse(saved);
+            doctors = (parsed && parsed.length >= 7) ? parsed : DEFAULT_SYSTEM_DOCTORS;
+            localStorage.setItem('thyrocare_public_doctors', JSON.stringify(doctors));
+          } catch(err) {
+            doctors = DEFAULT_SYSTEM_DOCTORS;
+          }
         } else {
-          doctors = [
-            { doctor_id: 'DOC1001', doctor_name: 'Dr. A. Sharma, MD', clinic_name: 'Apex Diagnostic & Healthcare Clinic', is_active: true, passcode: 'thyrocare123' },
-            { doctor_id: 'DOC1002', doctor_name: 'Dr. Priya Nair, MBBS, DNB', clinic_name: 'Nair HealthCare & Diagnostics', is_active: true, passcode: 'clinic456' },
-            { doctor_id: 'DOC1003', doctor_name: 'Dr. Rajesh Verma, MD', clinic_name: 'Metro Wellness Center', is_active: false, passcode: 'locked789' }
-          ];
+          doctors = DEFAULT_SYSTEM_DOCTORS;
+          localStorage.setItem('thyrocare_public_doctors', JSON.stringify(doctors));
         }
       }
 
