@@ -73,26 +73,6 @@
         }
       }).catch(() => {});
     };
-
-    window.instantUnlockAdmin = function() {
-      window.isAdminAuthenticated = true;
-      try {
-        sessionStorage.setItem('thyrocare_admin_auth', 'true');
-      } catch (e) {}
-      const modal = document.getElementById('adminAuthModal');
-      if (modal) modal.classList.add('hidden');
-      if (typeof switchTab === 'function') {
-        switchTab('admin');
-      } else {
-        const docView = document.getElementById('doctorPortalView');
-        const adminView = document.getElementById('adminPortalView');
-        if (docView) docView.classList.add('hidden');
-        if (adminView) adminView.classList.remove('hidden');
-      }
-      if (typeof showToast === 'function') {
-        showToast('Admin Console Unlocked Successfully', 'success');
-      }
-    };
   </script>
   
   <!-- FontAwesome & Google Fonts -->
@@ -238,25 +218,15 @@
               <i id="adminEyeIcon" class="fa-solid fa-eye"></i>
             </button>
           </div>
-          <div class="mt-2.5 flex items-center justify-between bg-amber-50/70 p-2 rounded-lg border border-amber-200/70 text-xs">
-            <span class="text-[11px] text-amber-900">Pass: <strong class="font-mono text-amber-800">Abhinandanverma@8811</strong></span>
-            <button type="button" onclick="document.getElementById('adminPasswordInput').value='Abhinandanverma@8811'; document.getElementById('adminAuthAlert').classList.add('hidden');" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 bg-white border border-amber-300 px-2 py-0.5 rounded shadow-sm transition">Auto-fill</button>
-          </div>
         </div>
 
-        <div class="flex items-center justify-between gap-2 pt-1">
-          <button type="button" onclick="closeAdminAuthModal()" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onclick="closeAdminAuthModal()" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
             Cancel
           </button>
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="instantUnlockAdmin()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5" title="Bypass password and unlock immediately">
-              <i class="fa-solid fa-bolt text-slate-900"></i>
-              <span>Instant Unlock</span>
-            </button>
-            <button type="submit" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow transition">
-              Verify
-            </button>
-          </div>
+          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg shadow transition">
+            Unlock Admin Console
+          </button>
         </div>
       </form>
     </div>
@@ -1546,15 +1516,6 @@
           updateHeaderUI();
         }
       }).catch(() => {});
-    }
-
-    // 1-Click Instant Unlock for Admin Console
-    function instantUnlockAdmin() {
-      isAdminAuthenticated = true;
-      sessionStorage.setItem('thyrocare_admin_auth', 'true');
-      closeAdminAuthModal();
-      switchTab('admin');
-      showToast('Admin Console Unlocked Successfully', 'success');
     }
 
     async function handleLogin(event) {
