@@ -22,6 +22,7 @@ doctors_db = {
     "DOC1001": {
         "doctor_id": "DOC1001",
         "passcode_hash": hash_passcode("thyrocare123"),
+        "raw_passcode": "thyrocare123",
         "doctor_name": "Dr. A. Sharma, MD",
         "clinic_name": "Apex Diagnostic & Healthcare Clinic",
         "is_active": True,
@@ -30,6 +31,7 @@ doctors_db = {
     "DOC1002": {
         "doctor_id": "DOC1002",
         "passcode_hash": hash_passcode("clinic456"),
+        "raw_passcode": "clinic456",
         "doctor_name": "Dr. Priya Nair, MBBS, DNB",
         "clinic_name": "Nair HealthCare & Diagnostics",
         "is_active": True,
@@ -38,6 +40,7 @@ doctors_db = {
     "DOC1003": {
         "doctor_id": "DOC1003",
         "passcode_hash": hash_passcode("locked789"),
+        "raw_passcode": "locked789",
         "doctor_name": "Dr. Rajesh Verma, MD",
         "clinic_name": "Metro Wellness Center",
         "is_active": False,
@@ -326,6 +329,17 @@ class PortalHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 return self.send_json_response(404, {"error": f"Order {order_id} not found."})
 
+        elif parsed.path == '/api/v1/admin/orders/clear-all':
+            orders_db = []
+            return self.send_json_response(200, {
+                "message": "All orders & items deleted successfully.",
+                "total_orders": 0,
+                "total_revenue_b2b": 0,
+                "total_mrp_val": 0,
+                "total_savings_val": 0,
+                "orders": []
+            })
+
         elif parsed.path == '/api/v1/admin/doctors/add':
             doc_id = str(body.get('doctor_id', '')).strip().upper()
             doc_name = str(body.get('doctor_name', '')).strip()
@@ -342,6 +356,7 @@ class PortalHandler(http.server.SimpleHTTPRequestHandler):
             doctors_db[doc_id] = {
                 "doctor_id": doc_id,
                 "passcode_hash": hash_passcode(passcode),
+                "raw_passcode": passcode,
                 "doctor_name": doc_name,
                 "clinic_name": clinic_name,
                 "is_active": bool(is_active),
@@ -377,6 +392,7 @@ class PortalHandler(http.server.SimpleHTTPRequestHandler):
                 doc["is_active"] = is_active
             if passcode:
                 doc["passcode_hash"] = hash_passcode(passcode)
+                doc["raw_passcode"] = passcode
 
             return self.send_json_response(200, {
                 "message": f"Successfully updated Doctor {doc_id}",
@@ -423,6 +439,20 @@ class PortalHandler(http.server.SimpleHTTPRequestHandler):
             return self.send_json_response(200, {
                 "total": len(TEST_CATALOG),
                 "catalog": TEST_CATALOG
+            })
+
+        elif parsed.path == '/api/v1/doctors/public-list':
+            public_docs = []
+            for d_id, doc in doctors_db.items():
+                public_docs.append({
+                    "doctor_id": doc["doctor_id"],
+                    "doctor_name": doc["doctor_name"],
+                    "clinic_name": doc["clinic_name"],
+                    "is_active": doc["is_active"],
+                    "passcode": doc.get("raw_passcode", "")
+                })
+            return self.send_json_response(200, {
+                "doctors": public_docs
             })
 
         elif parsed.path == '/api/v1/admin/doctors':

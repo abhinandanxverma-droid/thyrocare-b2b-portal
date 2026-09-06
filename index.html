@@ -51,11 +51,11 @@
     <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
       
       <div class="bg-gradient-to-r from-[#002E60] to-[#004A98] p-6 text-white text-center relative overflow-hidden">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-2xl mb-3 border border-white/20">
-          <i class="fa-solid fa-stethoscope text-2xl text-cyan-300"></i>
+        <div class="inline-flex items-center justify-center bg-white p-2.5 rounded-2xl mb-3 shadow-lg border border-white/20">
+          <img src="thyrocare_logo.png" alt="Thyrocare Logo" class="h-8 w-auto object-contain" />
         </div>
-        <h1 class="text-2xl font-bold tracking-tight">THYROCARE B2B</h1>
-        <p class="text-xs text-cyan-200 mt-1 uppercase tracking-wider font-semibold">Doctor Authentication Portal</p>
+        <h1 class="text-xl font-bold tracking-tight">Thyrocare Doctor Portal</h1>
+        <p class="text-[11px] text-cyan-200 mt-0.5 uppercase tracking-wider font-semibold">Authorized B2B Partner Authentication</p>
       </div>
 
       <div class="p-6 sm:p-8 space-y-6">
@@ -99,21 +99,13 @@
         </form>
 
         <div class="pt-4 border-t border-slate-100">
-          <p class="text-xs font-semibold text-slate-500 mb-2">Demo Doctor Accounts (Click to Auto-fill):</p>
-          <div class="grid grid-cols-1 gap-2">
-            <button onclick="fillDemo('DOC1001', 'thyrocare123')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 bg-slate-50 hover:bg-blue-50/50 text-xs transition group">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-700 group-hover:text-[#004A98]">DOC1001 - Dr. A. Sharma (Active)</span>
-                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Active</span>
-              </div>
-            </button>
-            <button onclick="fillDemo('DOC1002', 'clinic456')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 bg-slate-50 hover:bg-blue-50/50 text-xs transition group">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-700 group-hover:text-[#004A98]">DOC1002 - Dr. Priya Nair (Active)</span>
-                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Active</span>
-              </div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-semibold text-slate-500">Registered Doctor Accounts (Click to Auto-fill):</p>
+            <button type="button" onclick="fetchAndRenderLoginDoctors()" class="text-[10px] text-[#004A98] hover:text-[#002E60] flex items-center gap-1 font-bold">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
             </button>
           </div>
+          <div id="loginDoctorCardsContainer" class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
       </div>
     </div>
@@ -212,12 +204,12 @@
         
         <div class="flex items-center gap-6">
           <div class="flex items-center gap-3">
-            <div class="bg-white/10 p-2 rounded-lg border border-white/20">
-              <i class="fa-solid fa-microscope text-cyan-400 text-xl"></i>
+            <div class="bg-white p-1.5 rounded-xl shadow-sm border border-slate-200/50 flex items-center justify-center">
+              <img src="thyrocare_logo.png" alt="Thyrocare Logo" class="h-7 sm:h-8 w-auto object-contain" />
             </div>
             <div>
-              <h2 class="font-bold text-lg leading-none tracking-wide text-white">THYROCARE <span class="text-cyan-400 font-normal">B2B</span></h2>
-              <p class="text-[11px] text-slate-300 font-medium">Doctor Partner Portal</p>
+              <h2 class="font-bold text-base sm:text-lg leading-none tracking-wide text-white">THYROCARE <span class="text-cyan-400 font-normal">B2B</span></h2>
+              <p class="text-[10px] sm:text-[11px] text-slate-300 font-medium">Doctor Partner Portal</p>
             </div>
           </div>
 
@@ -284,11 +276,63 @@
 
 
     <!-- VIEW 1: DOCTOR PORTAL DASHBOARD -->
-    <div id="doctorPortalView" class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 flex-1">
+    <div id="doctorPortalView" class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 flex-1">
+
+      <!-- Hero Diagnostic Showcase Banner -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-[#002E60] to-[#004A98] shadow-lg border border-slate-200/40">
+        <div class="absolute inset-0 opacity-25 bg-cover bg-center mix-blend-luminosity" style="background-image: url('hero_banner.jpg');"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+
+        <div class="relative p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-white">
+          <div class="space-y-1.5 max-w-2xl">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-cyan-300">
+              <i class="fa-solid fa-certificate text-amber-400"></i> NABL • CAP • ISO 9001 Accredited Lab Network
+            </div>
+            <h2 class="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
+              Direct B2B Pathology Distribution Network
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+              Access 2,000+ specialized diagnostic tests with live wholesale doctor margins, instant custom panel estimation, and barcode traceability.
+            </p>
+            <div class="pt-1 flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
+              <div class="flex items-center gap-1.5 font-semibold text-cyan-200">
+                <i class="fa-solid fa-bolt text-amber-400"></i> Same-Day Results
+              </div>
+              <div class="flex items-center gap-1.5 font-semibold text-cyan-200">
+                <i class="fa-solid fa-percent text-emerald-400"></i> Up to 65% Doctor Margins
+              </div>
+              <div class="flex items-center gap-1.5 font-semibold text-cyan-200">
+                <i class="fa-solid fa-vial-circle-check text-cyan-300"></i> Automated Processing
+              </div>
+            </div>
+          </div>
+
+          <div class="hidden sm:flex flex-col items-center bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/20 shrink-0 text-center">
+            <img src="thyrocare_logo.png" alt="Thyrocare" class="h-7 w-auto object-contain bg-white px-2.5 py-1 rounded-lg mb-1.5 shadow" />
+            <span class="text-[10px] font-bold text-cyan-300 uppercase tracking-wider">Central Processing Lab</span>
+            <span class="text-xs font-semibold text-white">24x7 Automated Testing</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Segmented View Switcher (< lg) -->
+      <div class="lg:hidden sticky top-16 z-30 bg-slate-100/95 backdrop-blur-md p-1 rounded-xl border border-slate-200 shadow-sm flex items-center gap-1">
+        <button type="button" id="mobileTabCatalogBtn" onclick="switchMobileDoctorView('catalog')" 
+          class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition bg-[#004A98] text-white shadow flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Diagnostic Catalog</span>
+        </button>
+        <button type="button" id="mobileTabEstimatorBtn" onclick="switchMobileDoctorView('estimator')" 
+          class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition bg-white text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Custom Panel</span>
+          <span id="mobileSelectedCountBadge" class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full ml-1 hidden">0</span>
+        </button>
+      </div>
 
       <!-- Catalog & Estimator Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div id="catalogColumn" class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 space-y-4">
             <div class="flex items-center justify-between">
               <h3 class="font-bold text-slate-800 text-base">Thyrocare B2B Diagnostic Catalog</h3>
@@ -315,7 +359,7 @@
           </div>
         </div>
 
-        <div class="lg:col-span-5 space-y-6">
+        <div id="estimatorColumn" class="hidden lg:block lg:col-span-5 space-y-6">
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 sticky top-20">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 class="font-bold text-slate-800 text-base">Custom Panel Estimator</h3>
@@ -421,8 +465,14 @@
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-            <h3 class="font-bold text-sm">Clinical Orders Directory & Actions</h3>
+          <div class="p-4 bg-slate-50 border-b flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+              <h3 class="font-bold text-sm text-slate-800">Clinical Orders Directory & Actions</h3>
+              <button type="button" onclick="confirmDeleteAllOrders()" id="btnDeleteAllOrders" 
+                class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-trash-can"></i> Delete All Orders
+              </button>
+            </div>
             <input type="text" id="adminSearchInput" oninput="filterAdminOrdersTable()" placeholder="Search orders..." class="px-3 py-1.5 text-xs border rounded-lg bg-white" />
           </div>
           <div class="overflow-x-auto">
@@ -550,6 +600,25 @@
     <footer class="bg-white border-t border-slate-200 mt-12 py-4 text-center text-xs text-slate-500">
       <p>© 2026 Thyrocare B2B Partner Portal • Enterprise Healthcare Distribution Network</p>
     </footer>
+  </div>
+
+  <!-- Sticky Bottom Mobile Action Bar (Shows when tests selected on phone) -->
+  <div id="mobileBottomBar" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-4 py-3 text-white shadow-2xl transition-transform duration-300 translate-y-full">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-bold text-cyan-300">
+          <span id="mobileBottomCount">0</span> Tests Selected
+        </div>
+        <div class="text-[11px] text-slate-300 font-mono">
+          B2B: <strong id="mobileBottomCost" class="text-white font-bold">₹0</strong>
+          <span class="text-emerald-400 font-semibold ml-1">(Save <span id="mobileBottomSave">₹0</span>)</span>
+        </div>
+      </div>
+      <button type="button" onclick="switchMobileDoctorView('estimator')" class="bg-gradient-to-r from-cyan-500 to-[#004A98] hover:from-cyan-400 hover:to-[#002E60] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition">
+        <span>Review & Order</span>
+        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </button>
+    </div>
   </div>
 
 
@@ -1024,12 +1093,87 @@
         closeDoctorModal();
         showToast(data.message, 'success');
         fetchAdminDoctors();
-      } catch (err) { showToast(err.message, 'error'); }
+        fetchAndRenderLoginDoctors();
+      } catch (err) {
+        let savedDocs = JSON.parse(localStorage.getItem('thyrocare_public_doctors') || '[]');
+        if (mode === 'add') {
+          savedDocs.push({ doctor_id: docId, doctor_name: docName, clinic_name: clinicName, passcode: passcode, is_active: isActive });
+        } else {
+          const idx = savedDocs.findIndex(d => d.doctor_id === docId);
+          if (idx >= 0) {
+            savedDocs[idx].doctor_name = docName;
+            savedDocs[idx].clinic_name = clinicName;
+            savedDocs[idx].is_active = isActive;
+            if (passcode) savedDocs[idx].passcode = passcode;
+          }
+        }
+        localStorage.setItem('thyrocare_public_doctors', JSON.stringify(savedDocs));
+        closeDoctorModal();
+        showToast("Doctor account saved! (Cloud Mode)", 'success');
+        fetchAdminDoctors();
+        fetchAndRenderLoginDoctors();
+      }
     }
 
     // --- SESSION & CATALOG ---
 
+    async function fetchAndRenderLoginDoctors() {
+      const container = document.getElementById('loginDoctorCardsContainer');
+      if (!container) return;
+      let doctors = [];
+      try {
+        const res = await fetch('/api/v1/doctors/public-list');
+        if (res.ok) {
+          const data = await res.json();
+          doctors = data.doctors || [];
+          localStorage.setItem('thyrocare_public_doctors', JSON.stringify(doctors));
+        } else {
+          throw new Error('Local fallback');
+        }
+      } catch (e) {
+        const saved = localStorage.getItem('thyrocare_public_doctors');
+        if (saved) {
+          doctors = JSON.parse(saved);
+        } else {
+          doctors = [
+            { doctor_id: 'DOC1001', doctor_name: 'Dr. A. Sharma, MD', clinic_name: 'Apex Diagnostic & Healthcare Clinic', is_active: true, passcode: 'thyrocare123' },
+            { doctor_id: 'DOC1002', doctor_name: 'Dr. Priya Nair, MBBS, DNB', clinic_name: 'Nair HealthCare & Diagnostics', is_active: true, passcode: 'clinic456' },
+            { doctor_id: 'DOC1003', doctor_name: 'Dr. Rajesh Verma, MD', clinic_name: 'Metro Wellness Center', is_active: false, passcode: 'locked789' }
+          ];
+        }
+      }
+
+      container.innerHTML = '';
+      if (doctors.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">No registered doctors found.</p>';
+        return;
+      }
+
+      doctors.forEach(doc => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `w-full text-left p-2.5 rounded-xl border ${doc.is_active ? 'border-slate-200 hover:border-[#004A98] bg-slate-50 hover:bg-blue-50/50' : 'border-rose-200 bg-rose-50/40 opacity-75'} text-xs transition group shadow-sm`;
+        btn.onclick = () => fillDemo(doc.doctor_id, doc.passcode || '');
+        btn.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="font-bold text-slate-800 group-hover:text-[#004A98] flex items-center gap-1.5">
+                <span>${doc.doctor_name}</span>
+                <span class="font-mono text-[10px] text-slate-400">(${doc.doctor_id})</span>
+              </div>
+              <div class="text-[11px] text-slate-500 truncate max-w-[240px]">${doc.clinic_name}</div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${doc.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+              ${doc.is_active ? 'Active' : 'Suspended'}
+            </span>
+          </div>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
     function checkExistingSession() {
+      fetchAndRenderLoginDoctors();
       const savedToken = sessionStorage.getItem('thyrocare_token');
       const savedDoctor = sessionStorage.getItem('thyrocare_doctor');
       if (savedToken && savedDoctor) {
@@ -1112,7 +1256,10 @@
       showToast(reason, 'info');
     }
 
-    function showAuthModal() { document.getElementById('authOverlay').classList.remove('hidden'); }
+    function showAuthModal() {
+      fetchAndRenderLoginDoctors();
+      document.getElementById('authOverlay').classList.remove('hidden');
+    }
     function hideAuthModal() { document.getElementById('authOverlay').classList.add('hidden'); }
     function updateHeaderUI() {
       if (!currentDoctor) return;
@@ -1120,9 +1267,12 @@
       document.getElementById('headerClinicName').textContent = currentDoctor.clinic_name;
       document.getElementById('headerDoctorId').textContent = currentDoctor.doctor_id;
     }
-    function fillDemo(docId, pass) {
-      document.getElementById('doctorIdInput').value = docId;
-      document.getElementById('passcodeInput').value = pass;
+    function fillDemo(id, passcode) {
+      document.getElementById('doctorIdInput').value = id;
+      document.getElementById('passcodeInput').value = passcode;
+      document.getElementById('authAlert').classList.add('hidden');
+      const loginBtn = document.getElementById('loginBtn');
+      if (loginBtn) loginBtn.focus();
     }
     function togglePasscodeVisibility() {
       const input = document.getElementById('passcodeInput');
@@ -1180,6 +1330,62 @@
       updateEstimatorSummary();
     }
 
+    function switchMobileDoctorView(view) {
+      const catCol = document.getElementById('catalogColumn');
+      const estCol = document.getElementById('estimatorColumn');
+      const catBtn = document.getElementById('mobileTabCatalogBtn');
+      const estBtn = document.getElementById('mobileTabEstimatorBtn');
+      if (!catCol || !estCol) return;
+
+      const activeClass = "flex-1 py-2 px-3 text-xs font-bold rounded-lg transition bg-[#004A98] text-white shadow flex items-center justify-center gap-1.5";
+      const inactiveClass = "flex-1 py-2 px-3 text-xs font-bold rounded-lg transition bg-white text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5";
+
+      if (view === 'estimator') {
+        catCol.classList.add('hidden');
+        estCol.classList.remove('hidden');
+        catBtn.className = inactiveClass;
+        estBtn.className = activeClass;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        catCol.classList.remove('hidden');
+        estCol.classList.add('hidden');
+        estCol.classList.add('lg:block');
+        catBtn.className = activeClass;
+        estBtn.className = inactiveClass;
+      }
+    }
+
+    async function confirmDeleteAllOrders() {
+      if (adminOrdersList.length === 0) {
+        showToast("No orders available to delete.", "info");
+        return;
+      }
+      const confirmed = confirm("Are you sure you want to delete ALL orders and added items? This action cannot be undone.");
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch('/api/v1/admin/orders/clear-all', { method: 'POST' });
+        const data = await res.json();
+        adminOrdersList = [];
+        renderAdminOrdersTable([]);
+        document.getElementById('kpiTotalOrders').textContent = '0';
+        document.getElementById('kpiTotalB2b').textContent = '₹0';
+        document.getElementById('kpiTotalMrp').textContent = '₹0';
+        document.getElementById('kpiTotalSavings').textContent = '₹0';
+        localStorage.removeItem('thyrocare_cloud_orders');
+        showToast(data.message || "All orders and items deleted successfully!", "success");
+      } catch (err) {
+        adminOrdersList = [];
+        renderAdminOrdersTable([]);
+        document.getElementById('kpiTotalOrders').textContent = '0';
+        document.getElementById('kpiTotalB2b').textContent = '₹0';
+        document.getElementById('kpiTotalMrp').textContent = '₹0';
+        document.getElementById('kpiTotalSavings').textContent = '₹0';
+        localStorage.removeItem('thyrocare_cloud_orders');
+        showToast("All orders deleted! (Cloud Mode)", "success");
+      }
+    }
+
     function toggleTestSelection(code) {
       if (selectedTestCodes.has(code)) selectedTestCodes.delete(code);
       else selectedTestCodes.add(code);
@@ -1192,6 +1398,30 @@
       document.getElementById('selectedCount').textContent = `${selectedItems.length} Items`;
       const btn = document.getElementById('placeOrderBtn');
       const clearBtn = document.getElementById('clearTestsBtn');
+
+      // Mobile floating bar & badge updates
+      const mobileBadge = document.getElementById('mobileSelectedCountBadge');
+      const mobileBottom = document.getElementById('mobileBottomBar');
+      const mobileBottomCount = document.getElementById('mobileBottomCount');
+      const mobileBottomCost = document.getElementById('mobileBottomCost');
+      const mobileBottomSave = document.getElementById('mobileBottomSave');
+
+      if (mobileBadge) {
+        mobileBadge.textContent = selectedItems.length;
+        if (selectedItems.length > 0) mobileBadge.classList.remove('hidden');
+        else mobileBadge.classList.add('hidden');
+      }
+
+      if (mobileBottom) {
+        if (selectedItems.length > 0) {
+          mobileBottomCount.textContent = selectedItems.length;
+          mobileBottomCost.textContent = `₹${totalB2b}`;
+          mobileBottomSave.textContent = `₹${totalSavings}`;
+          mobileBottom.classList.remove('translate-y-full');
+        } else {
+          mobileBottom.classList.add('translate-y-full');
+        }
+      }
 
       if (selectedItems.length === 0) {
         container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No tests selected.</div>`;
