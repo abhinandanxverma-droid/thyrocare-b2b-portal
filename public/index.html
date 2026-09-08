@@ -1724,16 +1724,6 @@
       tbody.innerHTML = '';
       let filtered = catalog.filter(i => i.code.toLowerCase().includes(searchQuery) || i.name.toLowerCase().includes(searchQuery) || i.specimen.toLowerCase().includes(searchQuery));
       
-      // Default high margin ordering (highest margin at the top)
-      filtered.sort((a, b) => {
-        const marginA = (a.mrp || 0) - (a.b2b_rate || 0);
-        const marginB = (b.mrp || 0) - (b.b2b_rate || 0);
-        if (marginB !== marginA) return marginB - marginA;
-        const pctA = a.mrp > 0 ? (marginA / a.mrp) : 0;
-        const pctB = b.mrp > 0 ? (marginB / b.mrp) : 0;
-        return pctB - pctA;
-      });
-
       document.getElementById('catalogCountBadge').textContent = `${filtered.length} Tests`;
 
       filtered.forEach(item => {
