@@ -417,27 +417,12 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div id="catalogColumn" class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 space-y-4">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <h3 class="font-bold text-slate-800 text-base">Thyrocare B2B Diagnostic Catalog</h3>
-                <p class="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                  <i class="fa-solid fa-arrow-trend-up"></i> Sorted in High-Margin Order (Highest Profit Margins at Top)
-                </p>
-              </div>
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-800 text-base">Thyrocare B2B Diagnostic Catalog</h3>
               <span id="catalogCountBadge" class="bg-blue-100 text-[#004A98] text-xs font-bold px-2.5 py-1 rounded-full">0 Tests</span>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input type="text" id="catalogSearchInput" oninput="renderCatalog()" placeholder="Search by Test Code, Test Name, or Specimen..." 
-                class="flex-1 px-3.5 py-2.5 bg-white rounded-xl border border-slate-300 text-xs outline-none focus:border-[#004A98]" />
-              <select id="catalogSortSelect" onchange="renderCatalog()" 
-                class="px-3 py-2.5 bg-white rounded-xl border border-slate-300 text-xs text-slate-700 font-semibold outline-none focus:border-[#004A98] shadow-sm">
-                <option value="margin_desc" selected>💰 Highest Margin (₹) (Default)</option>
-                <option value="margin_pct_desc">📈 Highest Margin (%)</option>
-                <option value="rate_asc">🏷️ Lowest B2B Rate (₹)</option>
-                <option value="mrp_desc">💎 Highest MRP (₹)</option>
-                <option value="name_asc">🔤 Test Name (A-Z)</option>
-              </select>
-            </div>
+            <input type="text" id="catalogSearchInput" oninput="renderCatalog()" placeholder="Search by Test Code, Test Name, or Specimen..." 
+              class="w-full px-3.5 py-2.5 bg-white rounded-xl border border-slate-300 text-xs outline-none focus:border-[#004A98]" />
           </div>
 
           <div class="p-5 flex-1 overflow-x-auto">
@@ -1739,21 +1724,14 @@
       tbody.innerHTML = '';
       let filtered = catalog.filter(i => i.code.toLowerCase().includes(searchQuery) || i.name.toLowerCase().includes(searchQuery) || i.specimen.toLowerCase().includes(searchQuery));
       
-      const sortSelect = document.getElementById('catalogSortSelect');
-      const sortMode = sortSelect ? sortSelect.value : 'margin_desc';
+      // Default high margin ordering (highest margin at the top)
       filtered.sort((a, b) => {
-        const marginA = a.mrp - a.b2b_rate;
-        const marginB = b.mrp - b.b2b_rate;
-        if (sortMode === 'margin_desc') return marginB - marginA;
-        if (sortMode === 'margin_pct_desc') {
-          const pctA = a.mrp > 0 ? (marginA / a.mrp) : 0;
-          const pctB = b.mrp > 0 ? (marginB / b.mrp) : 0;
-          return pctB - pctA;
-        }
-        if (sortMode === 'rate_asc') return a.b2b_rate - b.b2b_rate;
-        if (sortMode === 'mrp_desc') return b.mrp - a.mrp;
-        if (sortMode === 'name_asc') return a.name.localeCompare(b.name);
-        return 0;
+        const marginA = (a.mrp || 0) - (a.b2b_rate || 0);
+        const marginB = (b.mrp || 0) - (b.b2b_rate || 0);
+        if (marginB !== marginA) return marginB - marginA;
+        const pctA = a.mrp > 0 ? (marginA / a.mrp) : 0;
+        const pctB = b.mrp > 0 ? (marginB / b.mrp) : 0;
+        return pctB - pctA;
       });
 
       document.getElementById('catalogCountBadge').textContent = `${filtered.length} Tests`;
