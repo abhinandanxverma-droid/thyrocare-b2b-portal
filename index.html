@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Thyrocare B2B Doctor & Admin Portal</title>
   
   <!-- Tailwind CSS CDN -->
@@ -1698,17 +1701,18 @@
     }
 
     async function fetchCatalog() {
+      const cacheBust = '?v=' + Date.now();
       try {
-        let response = await fetch('/api/v1/catalog');
+        let response = await fetch('/api/v1/catalog' + cacheBust);
         if (!response.ok) {
-          response = await fetch('catalog_data.json');
+          response = await fetch('catalog_data.json' + cacheBust, { cache: 'no-store' });
         }
         const data = await response.json();
         catalog = Array.isArray(data) ? data : (data.catalog || []);
         renderCatalog();
       } catch (err) {
         try {
-          const fallbackRes = await fetch('catalog_data.json');
+          const fallbackRes = await fetch('catalog_data.json' + cacheBust, { cache: 'no-store' });
           const data = await fallbackRes.json();
           catalog = Array.isArray(data) ? data : (data.catalog || []);
           renderCatalog();
