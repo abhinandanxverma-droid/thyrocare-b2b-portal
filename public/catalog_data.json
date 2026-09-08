@@ -3337,10 +3337,10 @@
     "name": "HEALTH PROTECTOR 2",
     "category": "Packages",
     "specimen": "Blood / Serum",
-    "b2b_rate": 706,
+    "b2b_rate": 894,
     "mrp": 2500,
-    "margin": 1794,
-    "margin_pct": 71.8,
+    "margin": 1606,
+    "margin_pct": 64.2,
     "description": "Official Thyrocare Packages: HEALTH PROTECTOR 2."
   },
   {
@@ -3865,10 +3865,10 @@
     "name": "ESSENTIAL HEALTH CHECKUP PROFILE - ALL IN ONE",
     "category": "Packages",
     "specimen": "Blood / Serum",
-    "b2b_rate": 370,
+    "b2b_rate": 458,
     "mrp": 1400,
-    "margin": 1030,
-    "margin_pct": 73.6,
+    "margin": 942,
+    "margin_pct": 67.3,
     "description": "Official Thyrocare Packages: ESSENTIAL HEALTH CHECKUP PROFILE - ALL IN ONE."
   },
   {
